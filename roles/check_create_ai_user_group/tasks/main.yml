@@ -1,0 +1,72 @@
+#Ansible script to check and create Ab-Initio user group and account
+
+- name: Ensure the log file exists
+  file:
+    path: /tmp/ansible_logs/logs_check_create_user_grp.txt
+    state: touch
+  become: yes
+
+- name: Checking if Ab Initio group exists
+  shell: cat /etc/group | grep '{{ ai_grp }}'
+  register: group_exist
+  ignore_errors: true
+  become: yes
+
+- name: Create Ab Initio group
+  group:
+    name: "{{ ai_grp }}"
+    state: present
+  when: group_exist.rc != 0
+
+- name: Log successful group creation
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_check_create_user_grp.txt
+    line: ' - {{ ai_grp }} - Group creation on the server has been completed.'
+  delegate_to: localhost
+  changed_when: false
+  when: group_exist.rc != 0
+
+- name: Log skipped group creation
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_check_create_user_grp.txt
+    line: ' - {{ ai_grp }} - Group creation on the server has been skipped as it already exists.'
+  delegate_to: localhost
+  changed_when: false
+  when: group_exist.rc == 0
+
+- name: Checking if Ab Initio user exists
+  shell: id '{{ ai_user }}'
+  register: user_exist
+  ignore_errors: true
+  become: yes
+
+- name: Create Ab Initio user
+  user:
+    name: "{{ ai_user }}"
+    group: "{{ ai_grp }}"
+    shell: /bin/ksh
+    generate_ssh_key: yes
+    ssh_key_bits: 3072
+    ssh_key_file: "/home/{{ ai_user }}/.ssh/id_rsa"
+    append: yes
+  when: user_exist.rc != 0
+
+- name: Log successful user creation
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_check_create_user_grp.txt
+    line: ' - {{ ai_user }} - User creation on the server has been completed.'
+  delegate_to: localhost
+  changed_when: false
+  when: user_exist.rc != 0
+ 
+- name: Log skipped user creation
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_check_create_user_grp.txt
+    line: ' - {{ ai_user }} - User creation on the server has been skipped as it already exists.'
+  delegate_to: localhost
+  changed_when: false
+  when: user_exist.rc == 0

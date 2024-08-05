@@ -1,0 +1,6 @@
+---
+java_install_dir: "/opt/java"
+log_file: "/tmp/ansible_logs/logs_pkg_task.txt"
+s3_bucket: "dev01-39591-abinitio-dev"
+java_tarball: "openjdk-17.0.2_linux-x64_bin.tar.gz"
+java_tarball_dest: "/opt/openjdk-17.0.2_linux-x64_bin.tar.gz"

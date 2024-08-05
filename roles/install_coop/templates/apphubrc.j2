@@ -1,0 +1,28 @@
+# /abinitio/opt/abinitio-app-hub/config/apphubrc: created by abinst
+
+AB_COOPERATING_SYSTEMS : abinst-V{{ ai_version }}
+AB_DISPLAY_NAME @ abinst-V{{ ai_version }} : V{{ ai_version }}
+AB_DESCRIPTION @ abinst-V{{ ai_version }} : Use V{{ ai_version }} installation as run Co>Operating System(R)
+AB_HOME @ abinst-V{{ ai_version }} : /abinitio/opt/abinitio-V{{ ai_version }}
+# Default Co>Operating System(R) for client services
+AB_CLIENT_SERVICES_HOME : /abinitio/opt/abinitio-V{{ ai_version }}
+#REPOSITORY DETAILS AS FOLLOWING-
+AB_EME_REPOSITORIES : dev_eme
+AB_AIR_BRANCHES @ dev_eme : main
+AB_DESCRIPTION @ dev_eme : Technical repository for Development
+AB_DISPLAY NAME @ dev_eme : dev_eme
+AB_AIR_ROOT @ dev_eme : //arceme.private-enterprise-dev.arc.travel/abinitio/eme/dev_eme
+AB_AIR_HOME @ dev_eme : /abinitio/opt/abinitio-V{{ ai_version }}
+## Key servers used by clients of this Application Hub.
+AB_KEYSERVER_URLS : abks://arcprimary.private-enterprise-dev.arc.travel:6150 abks://arceme.private-enterprise-dev.arc.travel:6150
+AB_KEYSERVER_GROUPS : ARC02
+AB_KEY_DAEMON_DIR : /abinitio/opt/ABKC/abkc/data
+#SSH connectivity Details
+AB_CONNECTION @ ip-10-174-97-5.ec2.internal : ssh
+AB_CONNECTION @ unixhost_all : ssh
+###MHUB Conf
+AB_MHUB_LOCAL_DIR : /abinitio/opt/WebProducts/MetadataHub/dev_mhub
+#Express>It Conf
+AB_AIR_ROOT @ dev_expressit : //arceme.private-enterprise-dev.arc.travel/abinitio/eme/dev_eme
+AB_AIR_BRANCH @ dev_expressit : main
+AB_APPCONF_ROOT_DIR @ dev_expressit : /abinitio/apps/dev/sand/abiadm/sand/

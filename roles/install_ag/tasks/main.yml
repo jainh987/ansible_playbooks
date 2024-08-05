@@ -1,0 +1,167 @@
+---
+- name: Creating log file
+  become: no
+  file:
+    dest: /tmp/ansible_logs/logs_ag_install.txt
+    state: touch
+  delegate_to: localhost
+
+- name: Copy and extract Installer Package from S3
+  aws_s3:
+    bucket: '{{ s3_bucket_name }}'
+    object: '{{ ag_package }}'
+    dest: '{{ src_file_path }}/{{ ag_package }}'
+    mode: get
+  register: s3_download
+
+- name: Extract Installer Package
+  unarchive:
+    src: '{{ src_file_path }}/{{ ag_package }}'
+    dest: '{{ dest_file_path }}'
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    remote_src: yes
+  register: unarchive
+
+- name: Updating log file
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_ag_install.txt
+    state: present
+    line: '- AG Package copy and extract Completed\n'
+  when: unarchive is success
+  delegate_to: localhost
+
+- name: Create AG Install and Deploy directories if they don't exist
+  become: yes
+  become_user: '{{ ai_user }}'
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: 0755
+  with_items:
+    - '{{ ag_install_path }}'
+    - '{{ ag_deploy_root }}/{{ ag_instance }}/config'
+
+- name: Installing AG
+  become: yes
+  become_user: '{{ ai_user }}'
+  shell: |
+    source '{{ env_src_file }}'
+    pkg='{{ ag_package }}'
+    cd {{ dest_file_path }}/$(echo $pkg | awk -F ".tar" '{print $1}')
+    echo "n" | ./ag-install.ksh -install-root '{{ ag_install_path }}'
+  args:
+    creates: '{{ ag_install_path }}/auth-gateway-{{ ag_version }}'
+  register: installerStatus
+
+- name: Updating log file
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_ag_install.txt
+    state: present
+    line: '- AG Installer ran successfully\n'
+  when: installerStatus is success
+  delegate_to: localhost
+
+- name: Copy AG deploy_params.config file
+  template:
+    src: './../templates/deploy_params.config.j2'
+    dest: "{{ ag_deploy_root }}/{{ ag_instance }}/deploy_params.config"
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: 0755
+
+- name: Copy DBC file to deployment root
+  template:
+    src: './../templates/ag.dbc.j2'
+    dest: "{{ ag_deploy_root }}/{{ ag_instance }}/ag.dbc"
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: 0755
+
+- name: Testing the DBC file for DB connect
+  become: yes
+  become_user: '{{ ai_user }}'
+  ignore_errors: true
+  shell: |
+    source '{{ env_src_file }}'
+    export AB_AG_HOME='{{ ag_install_path }}/auth-gateway-{{ ag_version }}'
+    export AB_AG_LOCAL_ROOT={{ ag_deploy_root }}
+    m_db test '{{ ag_deploy_root }}/{{ ag_instance }}/ag.dbc'
+  register: dbc_test
+
+- name: Log DB connection test failure
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_ag_install.txt
+    state: present
+    line: '- m_db test failed. Please ensure the DB instance is up and running fine.\n'
+  when: dbc_test is failed
+  delegate_to: localhost
+
+- name: Creating script for DB creation
+  ignore_errors: true
+  shell: |
+    source '{{ env_src_file }}'
+    export AB_AG_HOME='{{ ag_install_path }}/auth-gateway-{{ ag_version }}'
+    export AB_AG_CONFIG_DIR="{{ ag_deploy_root }}/{{ ag_instance }}/config"
+    ag-admin  datastore create-physical {{ datastore_name }} -{{ db_type }} -db-owner-username {{ db_user }} -db-owner-encrypted-password {{ db_encrypted_password }} -ds-appserver-encrypted-password {{ appserver_encrypted_password }} -ds-prefix {{ db_user_schema_prefix }} -db-port {{ db_port }} -generate-script >> '{{ ag_deploy_root }}/{{ ag_instance }}/config/ag-{{ db_type }}-create.sql'
+  when: dbc_test is failed
+
+- name: Running the AG deployment
+  become: yes
+  become_user: '{{ ai_user }}'
+  shell: |
+    source '{{ env_src_file }}'
+    export AB_AG_HOME='{{ ag_install_path }}/auth-gateway-{{ ag_version }}'
+    export AB_AG_LOCAL_ROOT={{ ag_deploy_root }}
+    ag-deploy -run -d {{ ag_deploy_root }}/{{ ag_instance }} -i '{{ ag_deploy_root }}/{{ ag_instance }}/deploy_params.config'
+  register: deployment
+
+- name: Updating log file
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_ag_install.txt
+    state: present
+    line: '- Deployment ran successfully\n'
+  when: deployment is success
+  delegate_to: localhost
+
+- name: Copy war file to Web Host
+  become: yes
+  become_user: '{{ ai_user }}'
+  copy:
+    src: '{{ ag_deploy_root }}/{{ ag_instance }}/config/{{ ag_instance }}.war'
+    dest: '{{ application_dest }}'
+    owner: "{{ app_user }}"
+    group: "{{ app_grp }}"
+    delegate_to: '{{ web_host }}'
+  when: app_type != 'ab-app'
+  register: warFileupload
+
+- name: Updating log file
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_ag_install.txt
+    state: present
+    line: '- War file deployed in Web application Server\n'
+  when: warFileupload is success
+  delegate_to: localhost
+
+- name: Display post installation message
+  debug:
+    msg:
+      - 'AG war file is created and placed at below location'
+      - 'Path: {{ ag_deploy_root }}/{{ ag_instance }}'
+
+- name: Add relevant parameters in abinitiorc
+  blockinfile:
+    path: '{{ ab_home_path }}/config/abinitiorc'
+    backup: yes
+    insertafter: EOF
+    block: |
+      AB_AG_LOCAL_ROOT: {{ ag_deploy_root }}
+      AB_AG_HOME: {{ ag_install_path }}/auth-gateway-{{ ag_version }}

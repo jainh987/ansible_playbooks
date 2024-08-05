@@ -1,0 +1,44 @@
+- name: Script to perform pre/post tasks and Co-Op Setup
+  hosts: all
+  become: yes
+  become_user: root
+  become_method: su
+  tasks:
+
+    - name: Create Partitions
+      include_role:
+        name: create_partition
+
+    - name: Create File Systems
+      include_role:
+        name: create_fs
+
+    - name: Create Mounts
+      include_role:
+        name: create_mounts
+
+    - name: Create necessary users
+      include_role:
+        name: check_create_ai_user_group
+
+    - name: Create directories for Ab Initio
+      include_role:
+        name: create_ab_dir
+
+    - name: Install Java
+      include_role:
+        name: install_pkgs
+
+    - name: Install Co-Op
+      include_role:
+        name: install_coop
+
+#    - name: Install Control-Center
+#      include_role:
+#        name: instal_cc
+
+#    - name: Install Authorization-Gateway
+#      include_role:
+#        name: instal_ag
+
+#More tasks to be added afterwards

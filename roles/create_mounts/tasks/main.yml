@@ -1,0 +1,66 @@
+# Task to create mounts
+
+- name: Ensure the directory log file exists
+  file:
+    path: /tmp/ansible_logs/logs_mount_creation.txt 
+    state: touch
+  become: yes
+
+- name: Check existing mounts on the server
+  ignore_errors: False
+  become: yes
+  become_method: su
+  shell: "findmnt"
+  register : mount_exist
+
+- name: Mount ab_work_dir
+  mount:
+    path: '{{ path_for_device_1_mount }}'
+    src: '{{ device_name_1 }}'
+    fstype: '{{ fstype_name }}'
+    opts: defaults
+    state: mounted
+  when: mount_exist is failed
+
+- name: Mount Serial,sandbox working area
+  mount:
+    path: '{{ path_for_device_2_mount }}'
+    src: '{{ device_name_2 }}'
+    fstype: '{{ fstype_name }}'
+    opts: defaults
+    state: mounted
+  when: mount_exist is failed
+
+- name: Mount mfs data files part1
+  mount:
+    path: '{{ path_for_device_3_mount }}'
+    src: '{{ device_name_3 }}'
+    fstype: '{{ fstype_name }}'
+    opts: defaults
+    state: mounted
+  when: mount_exist is failed
+
+- name: Mount mfs data files part2
+  mount:
+    path: '{{ path_for_device_4_mount }}'
+    src: '{{ device_name_4 }}'
+    fstype: '{{ fstype_name }}'
+    opts: defaults
+    state: mounted
+  when: mount_exist is failed
+
+- name: Updating log file when mount creation is successful
+  become: no
+  lineinfile:
+   dest: /tmp/ansible_logs/logs_mount_creation.txt state=present 
+   line: '  - Mount Creation on the server has been Completed\n'
+  delegate_to: localhost
+  when: mount_exist is failed
+
+- name: Updating log file when mounts already exist
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_mount_creation.txt 
+    line: '  - Mount Creation on the server has been Skipped as it is already exists.\n'
+  delegate_to: localhost
+  when: mount_exist is success 

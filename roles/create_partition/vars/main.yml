@@ -1,0 +1,6 @@
+device_name : /dev/nvme2n1
+label_name : gpt
+name_of_first_partition : ab_work_dir_mount
+name_of_second_partition : serial_mount
+name_of_third_partition : mfs_part1_mount
+name_of_fourth_partition : mfs_part2_mount

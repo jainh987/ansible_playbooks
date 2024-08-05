@@ -1,0 +1,60 @@
+# Ansible task to install Java Pkg
+
+- name: Ensure log directory exists
+  become: yes
+  file:
+    path: /tmp/ansible_logs
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+
+- name: Creating log file for Java Installation
+  become: yes
+  file:
+    dest: "{{ log_file }}"
+    state: touch
+  delegate_to: localhost
+
+- name: Check if Java is already installed
+  become: yes
+  stat:
+    path: "{{ java_install_dir }}/jdk-17.0.2"
+  register: java_installed
+
+- name: Log Java already installed
+  lineinfile:
+    path: "{{ log_file }}"
+    line: "Java already installed on {{ inventory_hostname }}"
+  when: java_installed.stat.exists
+  delegate_to: localhost
+
+- name: Create Java install directory
+  become: yes
+  file:
+    path: "{{ java_install_dir }}"
+    state: directory
+    mode: '0755'
+  when: not java_installed.stat.exists
+
+- name: List S3 bucket contents
+  become: yes
+  command: aws s3 ls s3://{{ s3_bucket }}
+  register: s3_list
+  when: not java_installed.stat.exists
+
+- name: Copy Java tarball from S3
+  become: yes
+  command: aws s3 cp s3://{{ s3_bucket }}/{{ java_tarball }} {{ java_tarball_dest }}
+  when: not java_installed.stat.exists
+
+- name: Extract Java tarball
+  become: yes
+  command: tar -zxvf {{ java_tarball_dest }} -C {{ java_install_dir }}
+  when: not java_installed.stat.exists
+
+- name: Log Java installation
+  lineinfile:
+    path: "{{ log_file }}"
+    line: "Java installed on {{ inventory_hostname }}"
+  when: not java_installed.stat.exists
+  delegate_to: localhost

@@ -1,0 +1,9 @@
+fstype_name : ext4
+device_name_1 : /dev/nvme1n1p1
+device_name_2 : /dev/nvme1n1p2
+device_name_3 : /dev/nvme1n1p3
+device_name_4 : /dev/nvme1n1p4
+path_for_device_1_mount : /persist/abinitio
+path_for_device_2_mount : /persist/serial
+path_for_device_3_mount : /persist/mfs_part1
+path_for_device_4_mount : /persist/mfs_part2

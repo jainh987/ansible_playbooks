@@ -1,0 +1,16 @@
+# system-wide config var settings
+AB_WORK_DIR: {{ ab_work_dir }}
+AB_DATA_DIR: {{ ab_data_dir }}
+#KEY CLIENT DETAILS-
+AB_KEYSERVER_GROUPS : ARC02
+AB_KEYSERVER_URLS  : abks://arcprimary.private-enterprise-dev.arc.travel:6150 abks://arceme.private-enterprise-dev.arc.travel:6150
+AB_KEY_DAEMON_DIR : /abinitio/opt/ABKC/abkc/data
+AB_RESERVED_TCP_LISTENER_PORTS : 6150
+
+#connection details
+AB_CONNECTION @ dev_eme : ssh
+AB_CONNECTION @ unixhost_all : ssh
+AB_CONNECTION : ssh
+AB_SSH_NEEDS_PASSWORD : false
+AB_HOST_ALIAS_FILE: /abinitio/opt/abinitio_coop/config/host-alias
+AB_OPS_PHYSICAL_HOSTNAME : arcprimary.private-enterprise-dev.arc.travel

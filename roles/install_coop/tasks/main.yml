@@ -1,0 +1,138 @@
+---
+- name: Create log file for Co-Operating System installation
+  become: no
+  file:
+    path: /tmp/ansible_logs/coop_setup_log.txt
+    state: touch
+  delegate_to: localhost
+
+- name: Check same Co-Operating System existence
+  stat:
+    path: "{{ install_path }}/abinitio-V{{ ai_version }}"
+  register: co_ops_dir_status
+
+- name: Log same Co-op already exist
+  debug:
+    msg: "Similar Co-op version '{{ ai_version }}' is already present on server."
+  when: co_ops_dir_status.stat.isdir
+
+- name: Ensure Co-op installation directory exists
+  file:
+    path: '{{ install_path }}'
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: '0775'
+    state: directory
+  when: not co_ops_dir_status.stat.isdir
+
+- name: Create working directory for installation
+  file:
+    path: '{{ work_directory_for_installation }}'
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: '0775'
+    state: directory
+  when: not co_ops_dir_status.stat.isdir
+
+- name: Download the Co-ops package from S3
+  aws_s3:
+    bucket: "{{ s3_bucket_name }}"
+    object: "{{ coop_package }}"
+    dest: "{{ work_directory_for_installation }}/{{ coop_package }}"
+    mode: get
+  when: not co_ops_dir_status.stat.isdir
+
+- name: Extract the Co-Operating System installer
+  unarchive:
+    src: "{{ work_directory_for_installation }}/{{ coop_package }}"
+    dest: "{{ work_directory_for_installation }}"
+    remote_src: yes
+  when: not co_ops_dir_status.stat.isdir
+
+- name: Log completion of package copy and extraction
+  lineinfile:
+    path: /tmp/ansible_logs/coop_setup_log.txt
+    line: '  - Co-Op Package copy and extraction completed\n'
+    state: present
+  delegate_to: localhost
+  when: not co_ops_dir_status.stat.isdir
+
+- name: Perform the Co-Operating System installation
+  shell: |
+    set -o pipefail
+    pkg='{{ coop_package }}'
+    install_dir="{{ work_directory_for_installation }}/$(basename $pkg .tar.gz)"
+    cd $install_dir
+    ./abinst -batch destination={{ install_path }} owner={{ ai_user }} group={{ ai_grp }} \
+      app_hub_dest={{ install_path }}/abinitio-app-hub-V{{ ai_version }} \
+      lser=2208 tmpdir={{ temp_dir }} \
+      utility={{ ab_work_dir }} \
+      data_dir={{ ab_data_dir }}
+  register: installation_result
+  when: not co_ops_dir_status.stat.isdir
+
+- name: Create environment configuration file
+  blockinfile:
+    path: '{{ Source_env_file_directory }}/coop_env.sh'
+    create: yes
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: '0775'
+    block: |
+      export AB_HOME={{ install_path }}/abinitio-V{{ ai_version }}
+      export PATH="$AB_HOME/bin:$PATH"
+      export LD_LIBRARY_PATH="$AB_HOME/lib:$LD_LIBRARY_PATH"
+      export AB_APPLICATION_HUB={{ install_path }}/abinitio-app-hub-V{{ ai_version }}
+      export AB_AIR_ROOT={{ Repository_path }}
+      export ODBCINI={{ ODBC_PATH }}
+      export JAVA_HOME={{ java_home }}
+      export PATH="$AB_HOME/bin:$JAVA_HOME/bin:$PATH"
+      export AB_DATA_DIR={{ ab_data_dir }}
+      export AB_WORK_DIR={{ ab_work_dir }}
+  when: installation_result is not skipped
+
+- name: Update .bashrc to source the environment file
+  shell: |
+    cp /home/{{ ai_user }}/.bashrc /home/{{ ai_user }}/.bashrc_bkp
+    echo 'source {{ Source_env_file_directory }}/coop_env.sh' >> /home/{{ ai_user }}/.bashrc
+  when: not co_ops_dir_status.stat.isdir
+
+- name: Create abinitiorc configuration
+  template:
+    src: 'abinitiorc.j2'
+    dest: "{{ install_path }}/abinitio-V{{ ai_version }}/config/abinitiorc"
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: '0700'
+  when: installation_result is not skipped
+
+- name: Create apphubrc configuration
+  template:
+    src: 'apphubrc.j2'
+    dest: "{{ install_path }}/abinitio-app-hub-V{{ ai_version }}/config/apphubrc"
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: '0700'
+  when: installation_result is not skipped
+
+- name: Remove the working directory after installation
+  file:
+    path: '{{ work_directory_for_installation }}'
+    state: absent
+  when: installation_result is not skipped
+
+- name: Log successful completion of the Co-Op installation
+  lineinfile:
+    path: /tmp/ansible_logs/coop_setup_log.txt
+    line: '\n  - Installation of the Co-Operating System Version {{ ai_version }} is completed successfully\n'
+    state: present
+  delegate_to: localhost
+  when: installation_result is not skipped
+
+- name: Log if installation was skipped
+  lineinfile:
+    path: /tmp/ansible_logs/coop_setup_log.txt
+    line: '\n  - Installation skipped as Co-op version {{ ai_version }} is already present on server.\n'
+    state: present
+  delegate_to: localhost
+  when: installation_result is skipped

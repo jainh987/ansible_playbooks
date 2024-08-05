@@ -1,0 +1,23 @@
+dbms: {{ dbms }}
+db_nodes: {{ db_host }}
+db_home: {{ db_home }}
+db_server_host: {{ db_host }}
+db_server_port: {{ db_port }}
+db_name: {{ db_name }}
+user: {{ db_user_schema_prefix }}importer
+## password:
+ag_meta_schema: {{ db_user_schema_prefix }}meta
+ag_main_schema: {{ db_user_schema_prefix }}main
+case: lower
+column_delimiter: \x01
+fully_qualify_dml: false
+dml_with_maximum_length: true
+interface: default
+generate_dml_with_nulls: true
+field_type_preference: delimited
+micrograph_transaction_style: one-phase-commit-nonrecoverable
+oldstyle_emptystring_as_null: false
+treat_blanks_as_null: true
+default_datetime_format: YYYY-MM-DD HH24:MI:SS
+encrypted_password: {{ admin_ab_encrypted_password }}
+max_data_size: 200000

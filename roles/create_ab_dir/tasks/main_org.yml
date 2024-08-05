@@ -1,0 +1,125 @@
+ - stat:
+    path: '{{ ab_work_dir }}'
+   register: ab_work_exists
+ - debug:
+    msg: "Path exists and is a directory"
+   when: ab_work_exists.stat.isdir is defined and ab_work_exists.stat.isdir
+
+ - stat:
+    path: '{{ ab_data_dir }}'
+   register: ab_data_exists
+ - debug:
+    msg: "Path exists and is a directory"
+   when: ab_data_exists.stat.isdir is defined and ab_data_exists.stat.isdir
+
+ - stat:
+    path: '{{ ab_volatile_dir }}'
+   register: ab_volatile_exits
+ - debug:
+    msg: "Path exists and is a directory"
+   when: ab_volatile_exits.stat.isdir is defined and ab_volatile_exits.stat.isdir
+
+ - stat:
+    path: '{{ ab_temp_dir }}'
+   register: ab_temp_dir_exists
+ - debug:
+    msg: "Path exists and is a directory"
+   when: ab_temp_dir_exists.stat.isdir is defined and ab_temp_dir_exists.stat.isdir
+
+
+ - name: Create Directories and set permissions
+   file:
+    path: "{{ item.dir }}"
+    state: directory
+    mode: "{{ dir_mode }}"
+    owner: "{{ ai_user }}"
+    group: "{{ ai_grp }}"
+   when: item.when
+   with_items:
+    - {
+        dir: "{{ ab_work_dir }}",
+        user: "{{ ai_user }}",
+        group: "{{ ai_grp }}",
+        when: ab_work_exists.stat.isdir != 0 and ab_work_exists.stat.isdir != 0,
+      }
+    - {
+        dir: "{{ ab_data_dir }}",
+        user: "{{ ai_user }}",
+        group: "{{ ai_grp }}",
+        when: ab_data_exists.stat.isdir != 0 and ab_data_exists.stat.isdir != 0,
+      }
+    - {
+        dir:  "{{ ab_volatile_dir }}",
+        user :  "{{ ai_user }}",
+        group:  "{{ ai_grp }}",
+        when: ab_volatile_exits.stat.isdir != 0 and ab_volatile_exits.stat.isdir != 0,
+      }
+    - {
+        dir: "{{ ab_temp_dir }}",
+        user: "{{ ai_user }}",
+        group: "{{ ai_grp }}",
+        when: ab_temp_dir_exists.stat.isdir != 0 and ab_temp_dir_exists.stat.isdir != 0,
+      }
+
+ - name: Updating log file when '{{ ab_work_dir }}'does not  exists 
+   become: no
+   lineinfile:
+    dest=/tmp/ansible_log_for_cops_pre_tasks.txt state=present line='  - Directory '{{ ab_work_dir}}' has been  created successfully on the server.\n'
+   delegate_to: localhost
+   when: ab_work_exists.stat.isdir != 0 and ab_work_exists.stat.isdir != 0
+
+
+ - name: Updating log file when '{{ ab_work_dir }}' exists
+   become: no
+   lineinfile:
+    dest=/tmp/ansible_log_for_cops_pre_tasks.txt state=present line='  - Directory '{{ ab_work_dir}}' has been present. Skipping the task.\n'
+   delegate_to: localhost
+   when: ab_work_exists.stat.isdir == 0 and ab_work_exists.stat.isdir == 0
+
+
+ - name: Updating log file when '{{ ab_data_dir }}'does not  exists
+   become: no
+   lineinfile:
+    dest=/tmp/ansible_log_for_cops_pre_tasks.txt state=present line='  - Directory '{{ ab_data_dir  }}' has been  created successfully on the server.\n'
+   delegate_to: localhost
+   when: ab_data_exists.stat.isdir != 0 and ab_data_exists.stat.isdir != 0
+
+
+ - name: Updating log file when '{{ ab_data_dir }}' exists
+   become: no
+   lineinfile:
+    dest=/tmp/ansible_log_for_cops_pre_tasks.txt state=present line='  - Directory '{{ ab_data_dir }}' has been present on the server. Hence skipping.\n'
+   delegate_to: localhost
+   when: ab_data_exists.stat.isdir == 0 and ab_data_exists.stat.isdir == 0
+
+
+ - name: Updating log file when '{{ ab_volatile_dir  }}' does not exists
+   become: no
+   lineinfile:
+    dest=/tmp/ansible_log_for_cops_pre_tasks.txt state=present line='  - Directory '{{ ab_volatile_dir  }}' has been created on the server.\n'
+   delegate_to: localhost
+   when: ab_volatile_exits.stat.isdir == 0 and ab_volatile_exits.stat.isdir == 0
+
+
+ - name: Updating log file when '{{ ab_volatile_dir  }}' exists
+   become: no
+   lineinfile:
+    dest=/tmp/ansible_log_for_cops_pre_tasks.txt state=present line='  - Directory '{{ ab_volatile_dir  }}' has been present on the server. Hence skipping.\n'
+   delegate_to: localhost    
+   when: ab_volatile_exits.stat.isdir != 0 and ab_volatile_exits.stat.isdir != 0
+
+
+ - name: Updating log file when '{{ ab_temp_dir  }}' does not exists
+   become: no
+   lineinfile:
+    dest=/tmp/ansible_log_for_cops_pre_tasks.txt state=present line='  - Directory '{{ ab_temp_dir  }}' has been created on the server.\n'
+   delegate_to: localhost
+   when: ab_temp_dir_exists.stat.isdir == 0 and ab_temp_dir_exists.stat.isdir == 0
+
+
+ - name: Updating log file when '{{ ab_temp_dir  }}' does not exists
+   become: no
+   lineinfile:
+    dest=/tmp/ansible_log_for_cops_pre_tasks.txt state=present line='  - Directory '{{ ab_temp_dir  }}' has been present on the server. Hence skipping.\n'
+   delegate_to: localhost
+   when: ab_temp_dir_exists.stat.isdir != 0 and ab_temp_dir_exists.stat.isdir != 0

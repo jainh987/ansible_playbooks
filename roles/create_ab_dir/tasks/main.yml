@@ -1,0 +1,109 @@
+# Check and create required Ab-Initio Directories
+
+- name: Ensure the directory log file exists
+  file:
+    path: /tmp/ansible_logs/logs_ab_dir.txt
+    state: touch
+  become: yes
+
+- name: Checking if Ab Initio working directory exists
+  stat:
+    path: '{{ ab_work_dir }}'
+  register: ab_work_exists
+  become: yes
+
+- name: Create the Ab Initio working directory if it does not exist
+  file:
+    path: '{{ ab_work_dir }}'
+    state: directory
+    owner: "{{ ai_user }}"
+    group: "{{ ai_grp }}"
+    mode: '0755'
+  when: ab_work_exists.stat.exists is not defined or not ab_work_exists.stat.exists
+  become: yes
+
+- name: Log ab_work directory creation
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_ab_dir.txt
+    line: ' - {{ ab_work_dir }} - Directory has been created successfully.'
+  delegate_to: localhost
+  changed_when: false
+  when: ab_work_exists.stat.exists is not defined or not ab_work_exists.stat.exists
+
+- name: Log ab_work directory creation skipped
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_ab_dir.txt
+    line: ' - {{ ab_work_dir }} - Directory creation skipped as it already exist.'
+  delegate_to: localhost
+  changed_when: false
+  when: ab_work_exists.stat.isdir is defined and ab_work_exists.stat.isdir
+
+- name: Checking if Ab Initio data directory exists
+  stat:
+    path: '{{ ab_data_dir }}'
+  register: ab_data_exists
+  become: yes
+
+- name: Create the Ab Initio data directory if it does not exist
+  file:
+    path: '{{ ab_data_dir }}'
+    state: directory
+    owner: "{{ ai_user }}"
+    group: "{{ ai_grp }}"
+    mode: '0755'
+  when: ab_data_exists.stat.exists is not defined or not ab_data_exists.stat.exists
+  become: yes
+  
+- name: Log data directory creation
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_ab_dir.txt
+    line: ' - {{ ab_data_dir }} - Data directory has been created successfully.'
+  delegate_to: localhost
+  changed_when: false
+  when: ab_data_exists.stat.exists is not defined or not ab_data_exists.stat.exists
+
+- name: Log data directory creation skipped
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_ab_dir.txt
+    line: ' - {{ ab_data_dir }} - Data directory creation skipped as it already exists and is a directory.'
+  delegate_to: localhost
+  changed_when: false
+  when: ab_data_exists.stat.isdir is defined and ab_data_exists.stat.isdir
+
+- name: Checking if Ab Initio temp directory exists
+  stat:
+    path: '{{ ab_temp_dir }}'
+  register: ab_temp_dir_exists
+  become: yes
+
+- name: Create the Ab Initio temp directory if it does not exist
+  file:
+    path: '{{ ab_temp_dir }}'
+    state: directory
+    owner: "{{ ai_user }}"
+    group: "{{ ai_grp }}"
+    mode: '0755'
+  when: ab_temp_dir_exists.stat.exists is not defined or not ab_temp_dir_exists.stat.exists
+  become: yes
+
+- name: Log temp directory creation
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_ab_dir.txt
+    line: ' - {{ ab_temp_dir }} - Temp directory has been created.'
+  delegate_to: localhost
+  changed_when: false
+  when: ab_temp_dir_exists.stat.exists is not defined or not ab_temp_dir_exists.stat.exists
+
+- name: Log temp directory creation skipped
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/logs_ab_dir.txt
+    line: ' - {{ ab_temp_dir }} - Temp directory creation skipped as it already exists and is a directory.'
+  delegate_to: localhost
+  changed_when: false
+  when: ab_temp_dir_exists.stat.isdir is defined and ab_temp_dir_exists.stat.isdir

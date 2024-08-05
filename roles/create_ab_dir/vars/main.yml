@@ -1,0 +1,6 @@
+ab_data_dir : /tmp/abinitio_test/ab_data_dir
+ab_work_dir : /tmp/abinitio_test/ab_work_dir
+ab_temp_dir : /tmp/abinitio_test/ab_tmp_dir 
+dir_mode : 0755
+ai_user : abiadm
+ai_grp : abigrp
