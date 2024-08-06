@@ -7,6 +7,38 @@
     state: touch
   delegate_to: localhost
 
+- name: Ensure pip is installed (Debian)
+  apt:
+    name: python3-pip
+    state: present
+  when: ansible_os_family == 'Debian'
+  become: yes
+
+- name: Ensure pip is installed (RedHat)
+  raw: yum install -y python3-pip
+  when: ansible_os_family == 'RedHat'
+  become: yes
+
+- name: Ensure ksh is installed (Debian)
+  apt:
+    name: ksh
+    state: present
+  when: ansible_os_family == 'Debian'
+  become: yes
+
+- name: Ensure ksh is installed (RedHat)
+  raw: yum install -y ksh
+  when: ansible_os_family == 'RedHat'
+  become: yes
+
+- name: Install boto3 and botocore
+  pip:
+    name:
+      - boto3
+      - botocore
+  become: yes
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
+
 - name: Copy and extract Installer Package from S3
   aws_s3:
     bucket: "{{ s3_bucket }}"
