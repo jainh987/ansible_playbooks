@@ -42,3 +42,13 @@ PLAY RECAP **********
 PLAY RECAP ********************************************************************************************************************************************
 localhost                  : ok=3    changed=1    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
 
+
+
+
+
+
+install_cc : Ensure pip is installed] ***********************************************************************************************************
+fatal: [localhost]: FAILED! => {"changed": false, "msg": "The Python 2 bindings for rpm are needed for this module. If you require Python 3 support use the `dnf` Ansible module instead.. The Python 2 yum module is needed for this module. If you require Python 3 support use the `dnf` Ansible module instead."}
+
+
+
