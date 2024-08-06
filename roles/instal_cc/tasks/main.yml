@@ -1,127 +1,107 @@
-#Task to install Control-Center
-
-- name: Creating log file
-  become: False
+---
+- name: Create tmp directory
   file:
-    dest: /tmp/ansible_logs/logs_install_cc.txt
+    path: ~/.ansible/tmp
+    state: directory
+    mode: 02775
+    owner: "{{ ai_user }}"
+    group: "{{ ai_grp }}"
+
+- name: Create log file for Co-Operating System post installation tasks
+  become: no
+  file:
+    path: /tmp/ansible_log_for_cops_post_tasks.txt
     state: touch
   delegate_to: localhost
 
-- name: Copy and extract Installer Package from S3
-  aws_s3:
-    bucket: "{{ s3_bucket }}"
-    object: "{{ s3_object }}"
-    dest: "{{ dest_file_path }}/{{ cc_package }}"
-    mode: get
-  register: s3_download
-
-- name: Unarchive the Installer Package
-  unarchive:
-    src: "{{ dest_file_path }}/{{ cc_package }}"
-    dest: "{{ dest_file_path }}"
-    owner: "{{ ai_user }}"
-    group: "{{ ai_grp }}"
-    mode: 509
-  when: s3_download is success
-  register: unarchive
-
-- name: Updating log file
-  become: False
-  lineinfile:
-    dest: /tmp/ansible_logs/logs_install_cc.txt
-    state: present
-    line: '- CC Package copy and extract Completed\n'
-  when: unarchive is success
-  delegate_to: localhost
-
-- name: Create CC Install and Deployment directories if they don't exist
-  become: True
-  become_user: "{{ ai_user }}"
-  file:
-    path: "{{ item }}"
-    state: directory
-    owner: "{{ ai_user }}"
-    group: "{{ ai_grp }}"
-    mode: 493
-  with_items:
-    - "{{ cc_install_path }}"
-    - "{{ cc_deploy_root }}"
-
-- name: Installing CC
-  become: True
-  become_user: "{{ ai_user }}"
+- name: Perform installation test for Co>Ops
   shell: |
-    source '{{ env_src_file }}'
-    pkg='{{ cc_package }}'
-    cd {{ dest_file_path }}/`echo $pkg | awk -F ".tar" '{print $1}'`
-    ./cc-install.ksh -install-root '{{ cc_install_path }}'
+    source /home/{{ ai_user }}/.bashrc
+    installation-test > /home/{{ ai_user }}/installation_test.output
   args:
-    creates: "{{ cc_install_path }}/controlcenter-{{ cc_ver_num }}"
-  register: installerStatus
+    creates: /home/{{ ai_user }}/installation_test.output
+  become: yes
+  become_user: "{{ ai_user }}"
+  register: install_test
 
-- name: Updating log file
-  become: False
+- name: Log installation test result
+  become: no
   lineinfile:
-    dest: /home/ansible/playbooks/roles/install-cc/logs/cc_logs.txt
+    path: /tmp/ansible_log_for_cops_post_tasks.txt
     state: present
-    line: '- CC Installer ran successfully\n'
-  when: installerStatus is success
+    line: >
+      {%- if install_test is success -%}
+      - installation-test for the Co-Operating System has completed successfully
+      {%- else -%}
+      - installation-test for the Co-Operating System has failed
+      {%- endif -%}
   delegate_to: localhost
 
-- name: Copy Control> Center setup.properties
-  template:
-    src: './../templates/setup.properties.j2'
-    dest: '{{ cc_install_path }}/setup.properties'
-    owner: '{{ ai_user }}'
-    group: '{{ ai_grp }}'
-    mode: 509
-
-- name: Creating Control> Center War file
-  become: True
-  become_user: '{{ ai_user }}'
+- name: Run ab-computer-info if installation test succeeds
   shell: |
-    source '{{ env_src_file }}'
-    cc-admin create {{ cc_instance }}
-    cc-admin configure -batch true -propFile {{ cc_install_path }}/setup.properties
-  register: warFileupload
+    source /home/{{ ai_user }}/.bashrc
+    ab-computer-info > /home/{{ ai_user }}/ab-computer-info.output
+  args:
+    creates: /home/{{ ai_user }}/ab-computer-info.output
+  become: yes
+  become_user: "{{ ai_user }}"
+  when: install_test is success
+  register: ab_info
 
-- name: Updating log file
-  become: False
+- name: Log ab-computer-info result
+  become: no
   lineinfile:
-    dest: /home/ansible/playbooks/roles/install-cc/logs/cc_logs.txt
+    path: /tmp/ansible_log_for_cops_post_tasks.txt
     state: present
-    line: '- War file deployed in Web application Server\n'
-  when: warFileupload is success
+    line: >
+      {%- if ab_info is success -%}
+      - ab-computer info test for the Co-Operating System has completed successfully
+      {%- else -%}
+      - ab-computer info test for the Co-Operating System has failed
+      {%- endif -%}
   delegate_to: localhost
 
-- name: Display message of Successful completion
-  debug:
-    msg:
-      - "CC war file is created and and placed at below location"
-      - "Path: {{ cc_deploy_root }}/{{ cc_instance }}"
-
-- name: Setting the reporter Configuration
-  become: True
-  become_user: '{{ ai_user }}'
+- name: Run ab-key show if installation test succeeds
   shell: |
-    source '{{ env_src_file }}'
-    ab-reporter start -wss-username ocagent -wss-encrypted-password {{ reporter_config_password }}
+    source /home/{{ ai_user }}/.bashrc
+    ab-key show > /home/{{ ai_user }}/ab-key-show.output
+  args:
+    creates: /home/{{ ai_user }}/ab-key-show.output
+  become: yes
+  become_user: "{{ ai_user }}"
+  when: install_test is success
+  register: ab_key
 
-- name: Add AB_OPS_CONSOLE_URL in abinitiorc
-  become: True
-  become_user: '{{ ai_user }}'
-  blockinfile:
-    path: '{{ ab_home_path }}/config/abinitiorc'
-    backup: True
-    insertafter: 'EOF'
-    block: |
-      AB_OPS_CONSOLE_URL : {{ app_protocol }}://{{ web_host }}:{{ app_port }}/{{ cc_instance }}
-
-- name: Updating log file
-  become: False
+- name: Log ab-key show result
+  become: no
   lineinfile:
-    dest: /home/ansible/playbooks/roles/install-cc/logs/cc_logs.txt
+    path: /tmp/ansible_log_for_cops_post_tasks.txt
     state: present
-    line: '- CC Installation Completed Successfully\n'
-  when: warFileupload is success
+    line: >
+      {%- if ab_key is success -%}
+      - ab-key show test for the Co-Operating System has completed successfully
+      {%- else -%}
+      - ab-key show test for the Co-Operating System has failed
+      {%- endif -%}
   delegate_to: localhost
+
+- name: Run m_ls connectivity check if installation test succeeds
+  shell: |
+    source /home/{{ ai_user }}/.bashrc
+    m_ls > /home/{{ ai_user }}/m-ls.output
+  args:
+    creates: /home/{{ ai_user }}/m-ls.output
+  become: yes
+  become_user: "{{ ai_user }}"
+  when: install_test is success
+  register: ls_test
+
+- name: Log m_ls connectivity check result
+  become: no
+  lineinfile:
+    path: /tmp/ansible_log_for_cops_post_tasks.txt
+    state: present
+    line: >
+      {%- if ls_test is success -%}
+      - m_ls connectivity test for the Co-Operating System has completed successfully
+      {
