@@ -129,6 +129,15 @@
     echo 'source {{ Source_env_file_directory }}/coop_env.sh' >> /home/{{ ai_user }}/.bashrc
   when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
+- name: Create host-alias configuration
+  template:
+    src: 'host-alias.j2'
+    dest: "{{ install_path }}/abinitio-V{{ ai_version }}/config/abinitiorc"
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: '0700'
+  when: installation_result is not skipped
+
 - name: Create abinitiorc configuration
   template:
     src: 'abinitiorc.j2'
