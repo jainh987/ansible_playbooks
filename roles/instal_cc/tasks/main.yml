@@ -1,159 +1,153 @@
-#Task to install Control-Center
-
-- name: Creating log file
-  become: False
+---
+- name: Create tmp directory
   file:
-    dest: /tmp/ansible_logs/logs_install_cc.txt
+    path: ~/.ansible/tmp
+    state: directory
+    mode: 02775
+    owner: "{{ ai_user }}"
+    group: "{{ ai_grp }}"
+
+- name: Create log file for Co-Operating System post installation tasks
+  become: no
+  file:
+    path: /tmp/ansible_log_for_cops_post_tasks.txt
     state: touch
   delegate_to: localhost
 
-- name: Ensure pip is installed (Debian)
-  apt:
-    name: python3-pip
-    state: present
-  when: ansible_os_family == 'Debian'
-  become: yes
+- name: Check if Co-Operating System directory exists
+  stat:
+    path: "{{ install_path }}/abinitio-V{{ ai_version }}"
+  register: co_ops_dir_status
 
-- name: Ensure pip is installed (RedHat)
-  raw: yum install -y python3-pip
-  when: ansible_os_family == 'RedHat'
-  become: yes
+- name: Log if Co-Operating System directory exists
+  debug:
+    msg: "Co-Operating System directory '{{ install_path }}/abinitio-V{{ ai_version }}' already exists."
+  when: co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir
 
-- name: Ensure ksh is installed (Debian)
-  apt:
-    name: ksh
-    state: present
-  when: ansible_os_family == 'Debian'
-  become: yes
+- name: Ensure Co-Operating System installation directory exists
+  file:
+    path: '{{ install_path }}'
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: '0775'
+    state: directory
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
-- name: Ensure ksh is installed (RedHat)
-  raw: yum install -y ksh
-  when: ansible_os_family == 'RedHat'
-  become: yes
+- name: Create working directory for installation
+  file:
+    path: '{{ work_directory_for_installation }}'
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: '0775'
+    state: directory
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
 - name: Install boto3 and botocore
   pip:
     name:
       - boto3
       - botocore
-  become: yes
   when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
-- name: Copy and extract Installer Package from S3
+- name: Download the Co-ops package from S3
   aws_s3:
-    bucket: "{{ s3_bucket }}"
-    object: "{{ s3_object }}"
-    dest: "{{ dest_file_path }}/{{ cc_package }}"
+    bucket: "{{ s3_bucket_name | trim }}"
+    object: "{{ coop_package | trim }}"
+    dest: "{{ work_directory_for_installation }}/{{ coop_package }}"
     mode: get
-  register: s3_download
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
-- name: Unarchive the Installer Package
+- name: Extract the Co-Operating System installer
   unarchive:
-    src: "{{ dest_file_path }}/{{ cc_package }}"
-    dest: "{{ dest_file_path }}"
-    owner: "{{ ai_user }}"
-    group: "{{ ai_grp }}"
-    mode: 509
-  when: s3_download is success
-  register: unarchive
+    src: "{{ work_directory_for_installation }}/{{ coop_package }}"
+    dest: "{{ work_directory_for_installation }}"
+    remote_src: yes
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
-- name: Updating log file
-  become: False
+- name: Log completion of package copy and extraction
   lineinfile:
-    dest: /tmp/ansible_logs/logs_install_cc.txt
+    path: /tmp/ansible_log_for_cops_post_tasks.txt
+    line: '  - Co-Op Package copy and extraction completed\n'
     state: present
-    line: '- CC Package copy and extract Completed\n'
-  when: unarchive is success
   delegate_to: localhost
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
-- name: Create CC Install and Deployment directories if they don't exist
-  become: True
-  become_user: "{{ ai_user }}"
-  file:
-    path: "{{ item }}"
-    state: directory
-    owner: "{{ ai_user }}"
-    group: "{{ ai_grp }}"
-    mode: 493
-  with_items:
-    - "{{ cc_install_path }}"
-    - "{{ cc_deploy_root }}"
-
-- name: Installing CC
-  become: True
-  become_user: "{{ ai_user }}"
+- name: Perform the Co-Operating System installation
   shell: |
-    source '{{ env_src_file }}'
-    pkg='{{ cc_package }}'
-    cd {{ dest_file_path }}/`echo $pkg | awk -F ".tar" '{print $1}'`
-    ./cc-install.ksh -install-root '{{ cc_install_path }}'
-  args:
-    creates: "{{ cc_install_path }}/controlcenter-{{ cc_ver_num }}"
-  register: installerStatus
+    set -o pipefail
+    pkg='{{ coop_package }}'
+    install_dir="{{ work_directory_for_installation }}/$(basename $pkg .tar.gz)"
+    cd $install_dir
+    ./abinst -batch destination={{ install_path }} owner={{ ai_user }} group={{ ai_grp }} \
+      app_hub_dest={{ install_path }}/abinitio-app-hub-V{{ ai_version }} \
+      lser=2208 tmpdir={{ temp_dir }} \
+      utility={{ ab_work_dir }} \
+      data_dir={{ ab_data_dir }}
+  register: installation_result
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
-- name: Updating log file
-  become: False
-  lineinfile:
-    dest: /tmp/ansible_logs/logs_install_cc.txt
-    state: present
-    line: '- CC Installer ran successfully\n'
-  when: installerStatus is success
-  delegate_to: localhost
-
-- name: Copy Control> Center setup.properties
-  template:
-    src: './../templates/setup.properties.j2'
-    dest: '{{ cc_install_path }}/setup.properties'
+- name: Create environment configuration file
+  blockinfile:
+    path: '{{ Source_env_file_directory }}/coop_env.sh'
+    create: yes
     owner: '{{ ai_user }}'
     group: '{{ ai_grp }}'
-    mode: 509
-
-- name: Creating Control> Center War file
-  become: True
-  become_user: '{{ ai_user }}'
-  shell: |
-    source '{{ env_src_file }}'
-    cc-admin create {{ cc_instance }}
-    cc-admin configure -batch true -propFile {{ cc_install_path }}/setup.properties
-  register: warFileupload
-
-- name: Updating log file
-  become: False
-  lineinfile:
-    dest: /tmp/ansible_logs/logs_install_cc.txt
-    state: present
-    line: '- War file deployed in Web application Server\n'
-  when: warFileupload is success
-  delegate_to: localhost
-
-- name: Display message of Successful completion
-  debug:
-    msg:
-      - "CC war file is created and and placed at below location"
-      - "Path: {{ cc_deploy_root }}/{{ cc_instance }}"
-
-- name: Setting the reporter Configuration
-  become: True
-  become_user: '{{ ai_user }}'
-  shell: |
-    source '{{ env_src_file }}'
-    ab-reporter start -wss-username ocagent -wss-encrypted-password {{ reporter_config_password }}
-
-- name: Add AB_OPS_CONSOLE_URL in abinitiorc
-  become: True
-  become_user: '{{ ai_user }}'
-  blockinfile:
-    path: '{{ ab_home_path }}/config/abinitiorc'
-    backup: True
-    insertafter: 'EOF'
+    mode: '0775'
     block: |
-      AB_OPS_CONSOLE_URL : {{ app_protocol }}://{{ web_host }}:{{ app_port }}/{{ cc_instance }}
+      export AB_HOME={{ install_path }}/abinitio-V{{ ai_version }}
+      export PATH="$AB_HOME/bin:$PATH"
+      export LD_LIBRARY_PATH="$AB_HOME/lib:$LD_LIBRARY_PATH"
+      export AB_APPLICATION_HUB={{ install_path }}/abinitio-app-hub-V{{ ai_version }}
+      export AB_AIR_ROOT={{ Repository_path }}
+      export ODBCINI={{ ODBC_PATH }}
+      export JAVA_HOME={{ java_home }}
+      export PATH="$AB_HOME/bin:$JAVA_HOME/bin:$PATH"
+      export AB_DATA_DIR={{ ab_data_dir }}
+      export AB_WORK_DIR={{ ab_work_dir }}
+  when: installation_result is not skipped
 
-- name: Updating log file
-  become: False
+- name: Update .bashrc to source the environment file
+  shell: |
+    cp /home/{{ ai_user }}/.bashrc /home/{{ ai_user }}/.bashrc_bkp
+    echo 'source {{ Source_env_file_directory }}/coop_env.sh' >> /home/{{ ai_user }}/.bashrc
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
+
+- name: Create abinitiorc configuration
+  template:
+    src: 'abinitiorc.j2'
+    dest: "{{ install_path }}/abinitio-V{{ ai_version }}/config/abinitiorc"
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: '0700'
+  when: installation_result is not skipped
+
+- name: Create apphubrc configuration
+  template:
+    src: 'apphubrc.j2'
+    dest: "{{ install_path }}/abinitio-app-hub-V{{ ai_version }}/config/apphubrc"
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: '0700'
+  when: installation_result is not skipped
+
+- name: Remove the working directory after installation
+  file:
+    path: '{{ work_directory_for_installation }}'
+    state: absent
+  when: installation_result is not skipped
+
+- name: Log successful completion of the Co-Op installation
   lineinfile:
-    dest: /tmp/ansible_logs/logs_install_cc.txt
+    path: /tmp/ansible_log_for_cops_post_tasks.txt
+    line: '\n  - Installation of the Co-Operating System Version {{ ai_version }} is completed successfully\n'
     state: present
-    line: '- CC Installation Completed Successfully\n'
-  when: warFileupload is success
   delegate_to: localhost
+  when: installation_result is not skipped
+
+- name: Log if installation was skipped
+  lineinfile:
+    path: /tmp/ansible_log_for_cops_post_tasks.txt
+    line: '\n  - Installation skipped as Co-op version {{ ai_version }} is already present on server.\n'
+    state: present
+  delegate_to: localhost
+  when: installation_result is skipped
