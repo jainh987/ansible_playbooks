@@ -1,66 +1,103 @@
-# Task to create mounts
-
-- name: Ensure the directory log file exists
-  file:
-    path: /tmp/ansible_logs/logs_mount_creation.txt 
-    state: touch
-  become: yes
-
-- name: Check existing mounts on the server
-  ignore_errors: False
+- name: Check if mount points exist
   become: yes
   become_method: su
-  shell: "findmnt"
-  register : mount_exist
+  command: "findmnt --noheadings --output TARGET"
+  register: mount_check
+
+- name: Set fact for existing mounts
+  set_fact:
+    mounts_existing: "{{ mount_check.stdout_lines }}"
+
+- name: Ensure mount points exist
+  file:
+    path: "{{ item.path }}"
+    state: directory
+  with_items:
+    - { path: "{{ path_for_device_1_mount }}" }
+    - { path: "{{ path_for_device_2_mount }}" }
+    - { path: "{{ path_for_device_3_mount }}" }
+    - { path: "{{ path_for_device_4_mount }}" }
+
+- name: Mount Serial, sandbox working area
+  mount:
+    path: "{{ path_for_device_1_mount }}"
+    src: "{{ device_name_1 }}"
+    fstype: "{{ fstype_name }}"
+    opts: defaults
+    state: mounted
+  when: path_for_device_1_mount not in mounts_existing
 
 - name: Mount ab_work_dir
   mount:
-    path: '{{ path_for_device_1_mount }}'
-    src: '{{ device_name_1 }}'
-    fstype: '{{ fstype_name }}'
+    path: "{{ path_for_device_2_mount }}"
+    src: "{{ device_name_2 }}"
+    fstype: "{{ fstype_name }}"
     opts: defaults
     state: mounted
-  when: mount_exist is failed
-
-- name: Mount Serial,sandbox working area
-  mount:
-    path: '{{ path_for_device_2_mount }}'
-    src: '{{ device_name_2 }}'
-    fstype: '{{ fstype_name }}'
-    opts: defaults
-    state: mounted
-  when: mount_exist is failed
+  when: path_for_device_2_mount not in mounts_existing
 
 - name: Mount mfs data files part1
   mount:
-    path: '{{ path_for_device_3_mount }}'
-    src: '{{ device_name_3 }}'
-    fstype: '{{ fstype_name }}'
+    path: "{{ path_for_device_3_mount }}"
+    src: "{{ device_name_3 }}"
+    fstype: "{{ fstype_name }}"
     opts: defaults
     state: mounted
-  when: mount_exist is failed
+  when: path_for_device_3_mount not in mounts_existing
 
 - name: Mount mfs data files part2
   mount:
-    path: '{{ path_for_device_4_mount }}'
-    src: '{{ device_name_4 }}'
-    fstype: '{{ fstype_name }}'
+    path: "{{ path_for_device_4_mount }}"
+    src: "{{ device_name_4 }}"
+    fstype: "{{ fstype_name }}"
     opts: defaults
     state: mounted
-  when: mount_exist is failed
+  when: path_for_device_4_mount not in mounts_existing
 
-- name: Updating log file when mount creation is successful
+- name: Ensure fstab entry for Serial, sandbox working area
+  lineinfile:
+    path: /etc/fstab
+    line: "{{ device_name_1 }} {{ path_for_device_1_mount }} {{ fstype_name }} defaults 0 2"
+    state: present
+
+- name: Ensure fstab entry for ab_work_dir
+  lineinfile:
+    path: /etc/fstab
+    line: "{{ device_name_2 }} {{ path_for_device_2_mount }} {{ fstype_name }} defaults 0 2"
+    state: present
+
+- name: Ensure fstab entry for mfs data files part1
+  lineinfile:
+    path: /etc/fstab
+    line: "{{ device_name_3 }} {{ path_for_device_3_mount }} {{ fstype_name }} defaults 0 2"
+    state: present
+
+- name: Ensure fstab entry for mfs data files part2
+  lineinfile:
+    path: /etc/fstab
+    line: "{{ device_name_4 }} {{ path_for_device_4_mount }} {{ fstype_name }} defaults 0 2"
+    state: present
+
+- name: Updating log file preinstallation task of Co-operating System for mount creation when it does not exist
   become: no
   lineinfile:
-   dest: /tmp/ansible_logs/logs_mount_creation.txt state=present 
-   line: '  - Mount Creation on the server has been Completed\n'
+    dest: /tmp/ansible_log_for_cops_pre_tasks.txt
+    state: present
+    line: '  - Mount Creation on the server has been Completed\n'
   delegate_to: localhost
-  when: mount_exist is failed
+  when: path_for_device_1_mount not in mounts_existing or 
+        path_for_device_2_mount not in mounts_existing or 
+        path_for_device_3_mount not in mounts_existing or 
+        path_for_device_4_mount not in mounts_existing
 
-- name: Updating log file when mounts already exist
+- name: Updating log file preinstallation task of Co-operating System for mount creation when it exists
   become: no
   lineinfile:
-    dest: /tmp/ansible_logs/logs_mount_creation.txt 
-    line: '  - Mount Creation on the server has been Skipped as it is already exists.\n'
+    dest: /tmp/ansible_log_for_cops_pre_tasks.txt
+    state: present
+    line: '  - Mount Creation on the server has been Skipped as it already exists.\n'
   delegate_to: localhost
-  when: mount_exist is success 
+  when: path_for_device_1_mount in mounts_existing and 
+        path_for_device_2_mount in mounts_existing and 
+        path_for_device_3_mount in mounts_existing and 
+        path_for_device_4_mount in mounts_existing
