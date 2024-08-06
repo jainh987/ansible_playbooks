@@ -17,11 +17,8 @@
     state: present
 
 - name: Install boto3 and botocore using pip3
-  pip:
-    name:
-      - boto3
-      - botocore
-  executable: pip3
+  shell: |
+    pip3 install boto3 botocore
   become: yes
 
 - name: Download the Co-ops package from S3
