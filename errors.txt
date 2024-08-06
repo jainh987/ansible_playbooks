@@ -4,3 +4,8 @@ fatal: [localhost]: FAILED! => {"boto3_version": "1.17.112", "botocore_version":
 TASK [install_cc : Log m_ls connectivity check result] ************************************************************************************************
 fatal: [localhost]: FAILED! => {"msg": "template error while templating string: Unexpected end of template. Jinja was looking for the following tags: 'elif' or 'else' or 'endif'. The innermost block that needs to be closed is 'if'.. String: {%- if ls_test is success -%} - m_ls connectivity test for the Co-Operating System has completed successfully {\n"}
 
+//////// ERROR WHILE INSTALLING CC/////
+TASK [install_cc : Install boto3 and botocore] ********************************************************************************************************
+fatal: [localhost]: FAILED! => {"msg": "The conditional check 'not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))' failed. The error was: error while evaluating conditional (not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))): 'co_ops_dir_status' is undefined\n\nThe error appears to be in '/tmp/ansible_playbooks/roles/install_cc/tasks/main.yml': line 34, column 3, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n\n- name: Install boto3 and botocore\n  ^ here\n"}
+
+PLAY RECAP ****
