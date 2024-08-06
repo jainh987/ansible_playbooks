@@ -58,6 +58,13 @@ fatal: [localhost]: FAILED! => {"changed": false, "msg": "The Python 2 bindings 
 
 
 
+TASK [install_cc : Creating Control> Center War file] *************************************************************************************************
+fatal: [localhost]: FAILED! => {"changed": true, "cmd": "source '/abinitio/apps/env_dev.ksh'\ncc-admin create test_controlcenter\ncc-admin configure -batch true -propFile /tmp/abinitio_test/ControlCenter/setup.properties\n", "delta": "0:00:01.350314", "end": "2024-08-06 13:45:50.110901", "msg": "non-zero return code", "rc": 1, "start": "2024-08-06 13:45:48.760587", "stderr": "stty: standard input: Inappropriate ioctl for device\nls: cannot access *.war: No such file or directory\nls: cannot access *.war: No such file or directory", "stderr_lines": ["stty: standard input: Inappropriate ioctl for device", "ls: cannot access *.war: No such file or directory", "ls: cannot access *.war: No such file or directory"], "stdout": "Creating Control>Center deployment directory: /abinitio/opt/WebProducts/ControlCenter/test_controlcenter\nPlease wait while the installer initializes...\n\nHelp available on:\n    backup\n    create\n    create-physical\n    db-ping\n    digest-reply-import\n    destroy\n    encrypt\n    generate-config\n    install-jdbc-driver\n    job\n    job <action>\n    job-definition\n    job-definition <action>\n    list\n    ping\n    restore\n    set-server-config\n    upgrade\n    verify-schema\n    version", "stdout_lines": ["Creating Control>Center deployment directory: /abinitio/opt/WebProducts/ControlCenter/test_controlcenter", "Please wait while the installer initializes...", "", "Help available on:", "    backup", "    create", "    create-physical", "    db-ping", "    digest-reply-import", "    destroy", "    encrypt", "    generate-config", "    install-jdbc-driver", "    job", "    job <action>", "    job-definition", "    job-definition <action>", "    list", "    ping", "    restore", "    set-server-config", "    upgrade", "    verify-schema", "    version"]}
+
+PLAY RECAP ********************************************************************************************************************************************
+localhost  
+
+
 
 fatal: [localhost]: FAILED! => {"changed": false, "cmd": "dnf install -y python3-dnf", "msg": "[Errno 2] No such file or directory: b'dnf': b'dnf'", "rc": 2}
 
