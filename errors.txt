@@ -1,2 +1,6 @@
 An exception occurred during task execution. To see the full traceback, use -vvv. The error was: Invalid bucket name "dev01-39591-abinitio-dev"": Bucket name must match the regex "^[a-zA-Z0-9.\-_]{1,255}$" or be an ARN matching the regex "^arn:(aws).*:s3:[a-z\-0-9]+:[0-9]{12}:accesspoint[/:][a-zA-Z0-9\-]{1,63}$"
 fatal: [localhost]: FAILED! => {"boto3_version": "1.17.112", "botocore_version": "1.18.6", "changed": false, "msg": "Failed while looking up bucket (during bucket_check) dev01-39591-abinitio-dev\".: Parameter validation failed:\nInvalid bucket name \"dev01-39591-abinitio-dev\"\": Bucket name must match the regex \"^[a-zA-Z0-9.\\-_]{1,255}$\" or be an ARN matching the regex \"^arn:(aws).*:s3:[a-z\\-0-9]+:[0-9]{12}:accesspoint[/:][a-zA-Z0-9\\-]{1,63}$\""}
+//////// ERROR WHILE INSTALLING CC /////
+TASK [install_cc : Log m_ls connectivity check result] ************************************************************************************************
+fatal: [localhost]: FAILED! => {"msg": "template error while templating string: Unexpected end of template. Jinja was looking for the following tags: 'elif' or 'else' or 'endif'. The innermost block that needs to be closed is 'if'.. String: {%- if ls_test is success -%} - m_ls connectivity test for the Co-Operating System has completed successfully {\n"}
+
