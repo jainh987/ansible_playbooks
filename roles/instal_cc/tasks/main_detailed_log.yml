@@ -1,0 +1,184 @@
+---
+- name: Create log file for Control-Center installation tasks
+  become: no
+  file:
+    path: /tmp/ansible_logs/logs_install_cc.txt
+    state: touch
+  delegate_to: localhost
+
+- name: Check if Co-Operating System directory exists
+  stat:
+    path: "/abinitio/opt/abinitio-V4-2-3-6"
+  register: co_ops_dir_status
+
+- name: Ensure pip3 is installed
+  shell: |
+    yum install -y python3-pip
+  become: yes
+
+- name: Install boto3 and botocore using pip3
+  shell: |
+    pip3 install boto3 botocore
+  become: yes
+
+- name: Download the Co-ops package from S3
+  aws_s3:
+    bucket: "{{ s3_bucket_name | trim }}"
+    object: "{{ coop_package | trim }}"
+    dest: "{{ work_directory_for_installation }}/{{ coop_package }}"
+    mode: get
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
+
+- name: Copy and extract Installer Package from S3
+  aws_s3:
+    bucket: "{{ s3_bucket }}"
+    object: "{{ s3_object }}"
+    dest: "{{ dest_file_path }}/{{ cc_package }}"
+    mode: get
+  register: s3_download
+
+- name: Unarchive the Installer Package
+  unarchive:
+    src: "{{ dest_file_path }}/{{ cc_package }}"
+    dest: "{{ dest_file_path }}"
+    owner: "{{ ai_user }}"
+    group: "{{ ai_grp }}"
+    mode: 509
+  when: s3_download is success
+  register: unarchive
+
+- name: Updating log file
+  become: False
+  lineinfile:
+    path: /tmp/ansible_logs/logs_install_cc.txt
+    state: present
+    line: '- CC Package copy and extract Completed\n'
+  when: unarchive is success
+  delegate_to: localhost
+
+- name: Create CC Install and Deployment directories if they don't exist
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - "{{ cc_install_path }}"
+    - "{{ cc_deploy_root }}"
+
+- name: Set ownership for CC Install and Deployment directories
+  become: yes
+  file:
+    path: "{{ item }}"
+    owner: "{{ ai_user }}"
+    group: "{{ ai_grp }}"
+    state: directory
+    recurse: yes
+  with_items:
+    - "{{ cc_install_path }}"
+    - "{{ cc_deploy_root }}"
+
+- name: Installing CC
+  become: yes
+  become_user: "{{ ai_user }}"
+  shell: |
+    source '{{ env_src_file }}'
+    pkg='{{ cc_package }}'
+    cd {{ dest_file_path }}/`echo $pkg | awk -F ".tar" '{print $1}'`
+    ./cc-install.ksh -install-root '{{ cc_install_path }}'
+  args:
+    creates: "{{ cc_install_path }}/controlcenter-{{ cc_ver_num }}"
+  register: installerStatus
+
+- name: Updating log file
+  become: False
+  lineinfile:
+    path: /tmp/ansible_logs/logs_install_cc.txt
+    state: present
+    line: '- CC Installer ran successfully\n'
+  when: installerStatus is success
+  delegate_to: localhost
+
+- name: Copy Control> Center setup.properties
+  template:
+    src: '../templates/setup.properties.j2'
+    dest: '{{ cc_install_path }}/setup.properties'
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: 509
+
+- name: Debug setup.properties content
+  become: yes
+  shell: cat '{{ cc_install_path }}/setup.properties'
+  register: setup_properties_debug
+
+- name: Print setup.properties content for debugging
+  debug:
+    var: setup_properties_debug.stdout_lines
+
+- name: Creating Control> Center War file
+  become: yes
+  become_user: '{{ ai_user }}'
+  shell: |
+    set -o xtrace
+    source '{{ env_src_file }}'
+    cc-admin create {{ cc_instance }} > /tmp/cc_admin_create.log 2>&1
+    cat /tmp/cc_admin_create.log
+    cc-admin configure -batch true -propFile {{ cc_install_path }}/setup.properties > /tmp/cc_admin_configure.log 2>&1
+    cat /tmp/cc_admin_configure.log
+  register: warFileupload
+
+- name: Print cc-admin create log for debugging
+  debug:
+    var: warFileupload.stdout_lines
+
+- name: Print cc-admin configure log for debugging
+  shell: cat /tmp/cc_admin_configure.log
+  register: cc_admin_configure_log
+
+- name: Print cc-admin configure log output
+  debug:
+    var: cc_admin_configure_log.stdout_lines
+
+- name: Updating log file
+  become: False
+  lineinfile:
+    path: /tmp/ansible_logs/logs_install_cc.txt
+    state: present
+    line: '- War file deployed in Web application Server\n'
+  when: warFileupload is success
+  delegate_to: localhost
+
+- name: Display message of Successful completion
+  debug:
+    msg:
+      - "CC war file is created and placed at below location"
+      - "Path: {{ cc_deploy_root }}/{{ cc_instance }}"
+
+- name: Setting the reporter Configuration
+  become: yes
+  become_user: '{{ ai_user }}'
+  shell: |
+    source '{{ env_src_file }}'
+    ab-reporter start -wss-username ocagent -wss-encrypted-password {{ reporter_config_password }}
+
+- name: Add AB_OPS_CONSOLE_URL in abinitiorc
+  become: yes
+  become_user: '{{ ai_user }}'
+  blockinfile:
+    path: '{{ ab_home_path }}/config/abinitiorc'
+    backup: True
+    insertafter: 'EOF'
+    block: |
+      AB_OPS_CONSOLE_URL : {{ app_protocol }}://{{ web_host }}:{{ app_port }}/{{ cc_instance }}
+
+- name: Updating log file
+  become: False
+  lineinfile:
+    path: /tmp/ansible_logs/logs_install_cc.txt
+    state: present
+    line: '- CC Installation Completed Successfully\n'
+  when: warFileupload is success
+  delegate_to: localhost
