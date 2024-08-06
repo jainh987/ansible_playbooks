@@ -11,10 +11,10 @@
     path: "/abinitio/opt/abinitio-V4-2-3-6"
   register: co_ops_dir_status
 
-- name: Ensure pip is installed
-  dnf:
-    name: python3-pip
-    state: present
+- name: Ensure pip3 is installed
+  shell: |
+    yum install -y python3-pip
+  become: yes
 
 - name: Install boto3 and botocore using pip3
   shell: |
@@ -57,7 +57,7 @@
   delegate_to: localhost
 
 - name: Create CC Install and Deployment directories if they don't exist
-  become: True
+  become: yes
   become_user: "{{ ai_user }}"
   file:
     path: "{{ item }}"
@@ -70,7 +70,7 @@
     - "{{ cc_deploy_root }}"
 
 - name: Installing CC
-  become: True
+  become: yes
   become_user: "{{ ai_user }}"
   shell: |
     source '{{ env_src_file }}'
@@ -99,7 +99,7 @@
     mode: 509
 
 - name: Creating Control> Center War file
-  become: True
+  become: yes
   become_user: '{{ ai_user }}'
   shell: |
     source '{{ env_src_file }}'
@@ -123,14 +123,14 @@
       - "Path: {{ cc_deploy_root }}/{{ cc_instance }}"
 
 #- name: Setting the reporter Configuration
-#  become: True
+#  become: yes
 #  become_user: '{{ ai_user }}'
 #  shell: |
 #    source '{{ env_src_file }}'
 #    ab-reporter start -wss-username ocagent -wss-encrypted-password {{ reporter_config_password }}
 #
 #- name: Add AB_OPS_CONSOLE_URL in abinitiorc
-#  become: True
+#  become: yes
 #  become_user: '{{ ai_user }}'
 #  blockinfile:
 #    path: '{{ ab_home_path }}/config/abinitiorc'
