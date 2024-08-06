@@ -15,6 +15,25 @@ PLAY RECAP ****
 TASK [install_cc : Check if Co-Operating System directory exists] *************************************************************************************
 fatal: [localhost]: FAILED! => {"msg": "The task includes an option with an undefined variable. The error was: 'install_path' is undefined\n\nThe error appears to be in '/tmp/ansible_playbooks/roles/install_cc/tasks/main.yml': line 17, column 3, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n\n- name: Check if Co-Operating System directory exists\n  ^ here\n"}
 
+
+
+
+
+
+TASK [install_cc : Install boto3 and botocore] ********************************************************************************************************
+task path: /tmp/ansible_playbooks/roles/install_cc/tasks/main.yml:10
+fatal: [localhost]: FAILED! => {
+    "msg": "The conditional check 'not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))' failed. The error was: error while evaluating conditional (not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))): 'co_ops_dir_status' is undefined\n\nThe error appears to be in '/tmp/ansible_playbooks/roles/install_cc/tasks/main.yml': line 10, column 3, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n\n- name: Install boto3 and botocore\n  ^ here\n"
+}
+
+PLAY RECAP ********************************************************************************************************************************************
+localhost                  : ok=2    changed=1    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
+
+
+
+
+
+
 PLAY RECAP ********************************************************************************************************************************************
 localhost                  : ok=3    changed=1    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
 
