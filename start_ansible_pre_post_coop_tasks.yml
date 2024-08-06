@@ -17,21 +17,21 @@
       include_role:
         name: create_mounts
 
-    - name: Create necessary users
-      include_role:
-        name: check_create_ai_user_group
-
-    - name: Create directories for Ab Initio
-      include_role:
-        name: create_ab_dir
-
-    - name: Install Java
-      include_role:
-        name: install_pkgs
-
-    - name: Install Co-Op
-      include_role:
-        name: install_coop
+#    - name: Create necessary users
+#      include_role:
+#        name: check_create_ai_user_group
+#
+#    - name: Create directories for Ab Initio
+#      include_role:
+#        name: create_ab_dir
+#
+#    - name: Install Java
+#      include_role:
+#        name: install_pkgs
+#
+#    - name: Install Co-Op
+#      include_role:
+#        name: install_coop
 
 #    - name: Install Control-Center
 #      include_role:
