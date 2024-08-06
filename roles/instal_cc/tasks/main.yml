@@ -11,12 +11,18 @@
     path: "/abinitio/opt/abinitio-V4-2-3-6"
   register: co_ops_dir_status
 
-- name: Install boto3 and botocore
+- name: Ensure pip is installed
+  dnf:
+    name: python3-pip
+    state: present
+
+- name: Install boto3 and botocore using pip3
   pip:
     name:
       - boto3
       - botocore
-  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
+  executable: pip3
+  become: yes
 
 - name: Download the Co-ops package from S3
   aws_s3:
