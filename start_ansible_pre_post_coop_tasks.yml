@@ -5,17 +5,17 @@
   become_method: su
   tasks:
 
-    - name: Create Partitions
-      include_role:
-        name: create_partition
-
-    - name: Create File Systems
-      include_role:
-        name: create_fs
-
-    - name: Create Mounts
-      include_role:
-        name: create_mounts
+#    - name: Create Partitions
+#      include_role:
+#        name: create_partition
+#
+#    - name: Create File Systems
+#      include_role:
+#        name: create_fs
+#
+#    - name: Create Mounts
+#      include_role:
+#        name: create_mounts
 
 #    - name: Create necessary users
 #      include_role:
@@ -29,9 +29,9 @@
 #      include_role:
 #        name: install_pkgs
 #
-#    - name: Install Co-Op
-#      include_role:
-#        name: install_coop
+    - name: Install Co-Op
+      include_role:
+        name: install_coop
 
 #    - name: Install Control-Center
 #      include_role:
