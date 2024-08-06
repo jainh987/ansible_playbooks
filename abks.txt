@@ -1,0 +1,6 @@
+abksconf
+abksadmin set-pw -url abks://ip-10-174-96-45.ec2.internal:6150
+abksadmin get-config -url abks://ip-10-174-96-45.ec2.internal:6150
+abksadmin install-bundle /tmp/20240723_ARC02_KR305516_3.xml -url abks://ip-10-174-96-45.ec2.internal:6150
+/abinitio/opt/ABKS/abks/abksd.ARC02 stop
+/abinitio/opt/ABKS/abks/abksd.ARC02 start
