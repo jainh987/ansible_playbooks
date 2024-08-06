@@ -35,7 +35,7 @@
 
     - name: Install Control-Center
       include_role:
-        name: instal_cc
+        name: install_cc
 
 #    - name: Install Authorization-Gateway
 #      include_role:
