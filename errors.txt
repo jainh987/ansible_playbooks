@@ -52,3 +52,8 @@ fatal: [localhost]: FAILED! => {"changed": false, "msg": "The Python 2 bindings 
 
 
 
+
+
+
+fatal: [localhost]: FAILED! => {"changed": false, "cmd": "dnf install -y python3-dnf", "msg": "[Errno 2] No such file or directory: b'dnf': b'dnf'", "rc": 2}
+
