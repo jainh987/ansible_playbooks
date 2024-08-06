@@ -104,4 +104,30 @@
     line: >
       {%- if ls_test is success -%}
       - m_ls connectivity test for the Co-Operating System has completed successfully
-      {
+      {%- else -%}
+      - m_ls connectivity test for the Co-Operating System has failed
+      {%- endif -%}
+  delegate_to: localhost
+
+- name: Insert initial log entry if installation test succeeded
+  become: no
+  lineinfile:
+    path: /tmp/ansible_log_for_cops_post_tasks.txt
+    insertbefore: BOF
+    state: present
+    line: ' - This is an automated email notification confirming successful completion of the post installation of the Co-Operating System.'
+  delegate_to: localhost
+  when: install_test is success
+
+- name: Append closing log entry
+  become: no
+  shell: |
+    echo -e "Thanks,\nSupport Team" >> /tmp/ansible_log_for_cops_post_tasks.txt
+  delegate_to: localhost
+
+- name: Send email with log file
+  become: no
+  shell: |
+    cat /tmp/ansible_log_for_cops_post_tasks.txt | mailx -s "AbInitio Co-Operating System post installation report" shahbaaz.alam@exusia.com,ravindra.dungawat@exusia.com,monica.padhy@exusia.com
+    rm -rf /tmp/ansible_log_for_cops_post_tasks.txt
+  delegate_to: localhost
