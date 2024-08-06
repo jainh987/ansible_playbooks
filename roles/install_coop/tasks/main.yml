@@ -14,7 +14,7 @@
 - name: Log same Co-op already exist
   debug:
     msg: "Similar Co-op version '{{ ai_version }}' is already present on server."
-  when: co_ops_dir_status.stat.isdir
+  when: co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false)
 
 - name: Ensure Co-op installation directory exists
   file:
@@ -23,7 +23,7 @@
     group: '{{ ai_grp }}'
     mode: '0775'
     state: directory
-  when: not co_ops_dir_status.stat.isdir
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
 - name: Create working directory for installation
   file:
@@ -32,7 +32,39 @@
     group: '{{ ai_grp }}'
     mode: '0775'
     state: directory
-  when: not co_ops_dir_status.stat.isdir
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
+
+- name: Ensure pip is installed (Debian)
+  apt:
+    name: python3-pip
+    state: present
+  when: ansible_os_family == 'Debian'
+  become: yes
+
+- name: Ensure pip is installed (RedHat)
+  raw: yum install -y python3-pip
+  when: ansible_os_family == 'RedHat'
+  become: yes
+
+- name: Ensure ksh is installed (Debian)
+  apt:
+    name: ksh
+    state: present
+  when: ansible_os_family == 'Debian'
+  become: yes
+
+- name: Ensure ksh is installed (RedHat)
+  raw: yum install -y ksh
+  when: ansible_os_family == 'RedHat'
+  become: yes
+
+- name: Install boto3 and botocore
+  pip:
+    name:
+      - boto3
+      - botocore
+  become: yes
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
 - name: Download the Co-ops package from S3
   aws_s3:
@@ -40,14 +72,14 @@
     object: "{{ coop_package }}"
     dest: "{{ work_directory_for_installation }}/{{ coop_package }}"
     mode: get
-  when: not co_ops_dir_status.stat.isdir
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
 - name: Extract the Co-Operating System installer
   unarchive:
     src: "{{ work_directory_for_installation }}/{{ coop_package }}"
     dest: "{{ work_directory_for_installation }}"
     remote_src: yes
-  when: not co_ops_dir_status.stat.isdir
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
 - name: Log completion of package copy and extraction
   lineinfile:
@@ -55,7 +87,7 @@
     line: '  - Co-Op Package copy and extraction completed\n'
     state: present
   delegate_to: localhost
-  when: not co_ops_dir_status.stat.isdir
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
 - name: Perform the Co-Operating System installation
   shell: |
@@ -69,7 +101,7 @@
       utility={{ ab_work_dir }} \
       data_dir={{ ab_data_dir }}
   register: installation_result
-  when: not co_ops_dir_status.stat.isdir
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
 - name: Create environment configuration file
   blockinfile:
@@ -95,7 +127,7 @@
   shell: |
     cp /home/{{ ai_user }}/.bashrc /home/{{ ai_user }}/.bashrc_bkp
     echo 'source {{ Source_env_file_directory }}/coop_env.sh' >> /home/{{ ai_user }}/.bashrc
-  when: not co_ops_dir_status.stat.isdir
+  when: not (co_ops_dir_status.stat.exists and co_ops_dir_status.stat.isdir | default(false))
 
 - name: Create abinitiorc configuration
   template:
