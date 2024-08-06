@@ -119,22 +119,22 @@
       - "CC war file is created and and placed at below location"
       - "Path: {{ cc_deploy_root }}/{{ cc_instance }}"
 
-#- name: Setting the reporter Configuration
-#  become: True
-#  become_user: '{{ ai_user }}'
-#  shell: |
-#    source '{{ env_src_file }}'
-#    ab-reporter start -wss-username ocagent -wss-encrypted-password {{ reporter_config_password }}
+- name: Setting the reporter Configuration
+  become: True
+  become_user: '{{ ai_user }}'
+  shell: |
+    source '{{ env_src_file }}'
+    ab-reporter start -wss-username ocagent -wss-encrypted-password {{ reporter_config_password }}
 
-#- name: Add AB_OPS_CONSOLE_URL in abinitiorc
-#  become: True
-#  become_user: '{{ ai_user }}'
-#  blockinfile:
-#    path: '{{ ab_home_path }}/config/abinitiorc'
-#    backup: True
-#    insertafter: 'EOF'
-#    block: |
-#      AB_OPS_CONSOLE_URL : {{ app_protocol }}://{{ web_host }}:{{ app_port }}/{{ cc_instance }}
+- name: Add AB_OPS_CONSOLE_URL in abinitiorc
+  become: True
+  become_user: '{{ ai_user }}'
+  blockinfile:
+    path: '{{ ab_home_path }}/config/abinitiorc'
+    backup: True
+    insertafter: 'EOF'
+    block: |
+      AB_OPS_CONSOLE_URL : {{ app_protocol }}://{{ web_host }}:{{ app_port }}/{{ cc_instance }}
 
 - name: Updating log file
   become: False
