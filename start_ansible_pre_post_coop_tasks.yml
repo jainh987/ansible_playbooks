@@ -29,13 +29,13 @@
 #      include_role:
 #        name: install_pkgs
 #
-    - name: Install Co-Op
-      include_role:
-        name: install_coop
-
-#    - name: Install Control-Center
+#    - name: Install Co-Op
 #      include_role:
-#        name: instal_cc
+#        name: install_coop
+
+    - name: Install Control-Center
+      include_role:
+        name: instal_cc
 
 #    - name: Install Authorization-Gateway
 #      include_role:
