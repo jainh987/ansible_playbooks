@@ -3,6 +3,8 @@
   become: yes
   become_user: root
   become_method: su
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   tasks:
 
 #    - name: Create Partitions
