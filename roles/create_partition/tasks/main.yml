@@ -1,9 +1,9 @@
 # Create partitions with parted module
 
- - name: Creating log file for preinstalltion task of Co-opearting System
+ - name: Creating log file for partitions creation
    become: no
    file:
-    dest: /tmp/ansible_logs/logs_create_partition.txt
+    dest: /tmp/ansible_logs/logs_partitions.txt
     state: touch
    delegate_to: localhost
 
@@ -12,10 +12,10 @@
    become: yes
    become_method: su
    shell: df
-   register : partition_exist 
+   register : partition_exit 
 
  
- - name: Create a new primary partition with a size of 50GB
+ - name: Create a new primary partition with a size of 200GB
    parted:
      device: '{{ device_name }}'
      label: '{{ label_name }}'
@@ -23,58 +23,60 @@
      number: 1
      state: present
      part_start: 1GB
-     part_end: 51GB
+     part_end: 201GB
      part_type: primary
-   when: partition_exist is failed 
+   when: partition_exit is failed 
 
- - name: Create a new extended partition with a size of 400GB
+ - name: Create a new extended partition with a size of 100GB
    parted:
      device: '{{ device_name }}'
      label: '{{ label_name }}'
      name: '{{ name_of_second_partition }}'
      number: 2
      state: present
-     part_start: 51GB
-     part_end: 451GB
+     part_start: 201GB
+     part_end: 301GB
      part_type: extended
-   when: partition_exist is failed 
+   when: partition_exit is failed 
 
- - name: Create a new extended partition with a size of 800GB
+ - name: Create a new extended partition with a size of 300GB
    parted:
      device: '{{ device_name }}'
      label: '{{ label_name }}'
      name: '{{ name_of_third_partition }}'
      number: 3
      state: present
-     part_start: 451GB
-     part_end: 1251GB
+     part_start: 301GB
+     part_end: 601GB
      part_type: extended
-   when: partition_exist is failed
+   when: partition_exit is failed
 
- - name: Create a new extended partition with a size of 800GB
+ - name: Create a new extended partition with a size of 300GB
    parted:
      device: '{{ device_name }}'
      label: '{{ label_name }}'
      name: '{{ name_of_fourth_partition }}'
      number: 4
      state: present
-     part_start: 1251GB
-     part_end: 2051GB
+     part_start: 601GB
+     part_end: 901GB
      part_type: extended
-   when: partition_exist is failed
+   when: partition_exit is failed
 
  - name: Updating log file preinstalltion task of Co-opearting System when partiotn is already exists
    become: no
    lineinfile:
-    dest: /tmp//tmp/ansible_logs/logs_create_partition.txt.txt 
-    line: '  - Partition Creation on the server has been Skipped as the Partitotn is already Exists.\n'
+    dest: /tmp/ansible_logs/logs_partitions.txt
+    state: present 
+    line: '  - Partition Creation on the server has been Skipped as the Partitotn is already Exists.'
    delegate_to: localhost
-   when: partition_exist is success
+   when: partition_exit is success
 
  - name: Updating log file preinstalltion task of Co-opearting System
    become: no
    lineinfile:
-    dest: /tmp/ansible_logs/logs_create_partition.txt.txt 
-    line: '  - Partition Creation on the server has been Completed\n'
+    dest: /tmp/ansible_logs/logs_partitions.txt
+    state: present 
+    line: '  - Partition Creation on the server has been Completed.'
    delegate_to: localhost
-   when: partition_exist is failed
+   when: partition_exit is failed
