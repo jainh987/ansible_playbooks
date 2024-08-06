@@ -43,7 +43,11 @@ PLAY RECAP *********************************************************************
 localhost                  : ok=3    changed=1    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
 
 
+TASK [install_cc : Create CC Install and Deployment directories if they don't exist] ******************************************************************
+failed: [localhost] (item=/tmp/abinitio_test/ControlCenter) => {"ansible_loop_var": "item", "changed": false, "item": "/tmp/abinitio_test/ControlCenter", "msg": "There was an issue creating /tmp/abinitio_test/ControlCenter as requested: [Errno 13] Permission denied: b'/tmp/abinitio_test/ControlCenter'", "path": "/tmp/abinitio_test/ControlCenter"}
+failed: [localhost] (item=/tmp/abinitio_test/CC_deploy) => {"ansible_loop_var": "item", "changed": false, "item": "/tmp/abinitio_test/CC_deploy", "msg": "There was an issue creating /tmp/abinitio_test/CC_deploy as requested: [Errno 13] Permission denied: b'/tmp/abinitio_test/CC_deploy'", "path": "/tmp/abinitio_test/CC_deploy"}
 
+PLAY RECA
 
 
 
