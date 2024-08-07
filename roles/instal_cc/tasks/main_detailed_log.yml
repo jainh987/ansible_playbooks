@@ -118,6 +118,17 @@
   debug:
     var: setup_properties_debug.stdout_lines
 
+- name: Ensure environment variables are set
+  shell: |
+    set -o xtrace
+    source '{{ env_src_file }}'
+    env
+  register: environment_check
+
+- name: Print environment variables
+  debug:
+    var: environment_check.stdout_lines
+
 - name: Creating Control> Center War file
   become: yes
   become_user: '{{ ai_user }}'
@@ -154,6 +165,27 @@
   debug:
     var: war_file_check
 
+- name: Check package directory for logs
+  become: yes
+  become_user: '{{ ai_user }}'
+  find:
+    paths: "{{ cc_install_path }}/package"
+    patterns: "*.log"
+  register: package_logs
+
+- name: Print package directory logs
+  debug:
+    var: package_logs
+
+- name: Print package logs content
+  shell: cat {{ item.path }}
+  register: package_log_content
+  with_items: "{{ package_logs.files }}"
+
+- name: Print package logs content
+  debug:
+    var: package_log_content.stdout_lines
+
 - name: Updating log file
   become: False
   lineinfile:
@@ -169,22 +201,22 @@
       - "CC war file is created and placed at below location"
       - "Path: {{ cc_deploy_root }}/{{ cc_instance }}"
 
-#- name: Setting the reporter Configuration
-#  become: yes
-#  become_user: '{{ ai_user }}'
-#  shell: |
-#    source '{{ env_src_file }}'
-#    ab-reporter start -wss-username ocagent -wss-encrypted-password {{ reporter_config_password }}
+- name: Setting the reporter Configuration
+  become: yes
+  become_user: '{{ ai_user }}'
+  shell: |
+    source '{{ env_src_file }}'
+    ab-reporter start -wss-username ocagent -wss-encrypted-password {{ reporter_config_password }}
 
-#- name: Add AB_OPS_CONSOLE_URL in abinitiorc
-#  become: yes
-#  become_user: '{{ ai_user }}'
-#  blockinfile:
-#    path: '{{ ab_home_path }}/config/abinitiorc'
-#    backup: True
-#    insertafter: 'EOF'
-#    block: |
-#      AB_OPS_CONSOLE_URL : {{ app_protocol }}://{{ web_host }}:{{ app_port }}/{{ cc_instance }}
+- name: Add AB_OPS_CONSOLE_URL in abinitiorc
+  become: yes
+  become_user: '{{ ai_user }}'
+  blockinfile:
+    path: '{{ ab_home_path }}/config/abinitiorc'
+    backup: True
+    insertafter: 'EOF'
+    block: |
+      AB_OPS_CONSOLE_URL : {{ app_protocol }}://{{ web_host }}:{{ app_port }}/{{ cc_instance }}
 
 - name: Updating log file
   become: False
