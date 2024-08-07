@@ -1,0 +1,7 @@
+---
+tomcat_install_dir: "/opt/tomcat"
+log_file: "/tmp/ansible_logs/logs_tomcat_install.txt"
+s3_bucket: "dev01-39591-abinitio-dev"
+tomcat_tarball: "openjdk-17.0.2_linux-x64_bin.tar.gz"
+tomcat_tarball_dest: "/opt/openjdk-17.0.2_linux-x64_bin.tar.gz"
+inventory_hostname: "Server_name"
