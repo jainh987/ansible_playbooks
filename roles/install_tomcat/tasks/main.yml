@@ -1,0 +1,75 @@
+---
+# Ansible task to install Tomcat
+
+# Necessary pkgs to access/connect to AWS S3 Bucket
+- name: Ensure pip3 is installed
+  shell: |
+    yum install -y python3-pip
+  become: yes
+
+- name: Install boto3 and botocore using pip3
+  shell: |
+    pip3 install boto3 botocore
+  become: yes
+
+# Ensure log directory exists
+- name: Ensure log directory exists
+  become: yes
+  file:
+    path: /tmp/ansible_logs
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+
+# Creating log file for package installations
+- name: Creating log file for package installations
+  become: yes
+  file:
+    dest: "{{ log_file }}"
+    state: touch
+  delegate_to: localhost
+
+# Tasks to install Tomcat
+- name: Check if Tomcat is already installed
+  become: yes
+  stat:
+    path: "{{ tomcat_install_dir }}/apache-tomcat-9.0.56"
+  register: tomcat_installed
+
+- name: Log Tomcat already installed
+  lineinfile:
+    path: "{{ log_file }}"
+    line: "Tomcat already installed on {{ inventory_hostname }}"
+  when: tomcat_installed.stat.exists
+  delegate_to: localhost
+
+- name: Create Tomcat install directory
+  become: yes
+  file:
+    path: "{{ tomcat_install_dir }}"
+    state: directory
+    mode: '0755'
+  when: not tomcat_installed.stat.exists
+
+- name: List S3 bucket contents for Tomcat
+  become: yes
+  command: aws s3 ls s3://{{ s3_bucket }}
+  register: s3_list
+  when: not tomcat_installed.stat.exists
+
+- name: Copy Tomcat tarball from S3
+  become: yes
+  command: aws s3 cp s3://{{ s3_bucket }}/{{ tomcat_tarball }} {{ tomcat_tarball_dest }}
+  when: not tomcat_installed.stat.exists
+
+- name: Extract Tomcat tarball
+  become: yes
+  command: tar -zxvf {{ tomcat_tarball_dest }} -C {{ tomcat_install_dir }}
+  when: not tomcat_installed.stat.exists
+
+- name: Log Tomcat installation
+  lineinfile:
+    path: "{{ log_file }}"
+    line: "Tomcat installed on {{ inventory_hostname }}"
+  when: not tomcat_installed.stat.exists
+  delegate_to: localhost
