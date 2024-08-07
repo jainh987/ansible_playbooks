@@ -142,6 +142,18 @@
   debug:
     var: cc_admin_configure_log.stdout_lines
 
+- name: Check for WAR file
+  become: yes
+  become_user: '{{ ai_user }}'
+  find:
+    paths: "{{ cc_install_path }}"
+    patterns: "*.war"
+  register: war_file_check
+
+- name: Print WAR file check result
+  debug:
+    var: war_file_check
+
 - name: Updating log file
   become: False
   lineinfile:
