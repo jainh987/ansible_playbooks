@@ -1,30 +1,30 @@
 ai_user: abiadm
 ai_grp: abigrp
-s3_bucket_name: your_s3_bucket_name  # Add your S3 bucket name here
-src_file_path: /tmp/ansible_s3_download  # Temporary path for S3 download
+s3_bucket_name: dev01-39591-abinitio-dev  # Add your S3 bucket name here
+src_file_path: /tmp  # Temporary path for S3 download
 dest_file_path: /tmp
-ag_version: 4-0-2-0
-ag_package: AuthorizationGateway.V4-0-2-0.tar.gz
-env_src_file: /opt/abinitio/skel/setup_aienv_4-0-2-0.ksh
-ag_install_path: /opt/abinitio/abroot/dist/ab-installations/installations_v4.0.2/ag-installs/test-installs
-ag_deploy_root: /opt/abinitio/abroot/dist/ab-deployments/deployments_v4.0.2/ag_v4_local_root/ag_test
-ag_instance: ag402_test
-ab_home_path: /opt/abinitio/abroot/dist/bin/abinitio-V4-0-2-0
-datastore_name: ag402_test
-db_type: ab-db
-db_host: localhost
-db_name: ag402_test
-db_port: 8080
-db_user: aguser402
+ag_version: 4-2-3-7
+ag_package: AuthorizationGateway.V4-2-3-7.tar.gz
+env_src_file: /tmp/env_dev.ksh
+ag_install_path: /tmp/abinitio_test
+ag_deploy_root: /tmp/abinitio_test/AG_deploy
+ag_instance: test_ag
+ab_home_path: /abinitio/opt/abinitio-V4-2-3-6
+datastore_name: qa_ag_db
+db_type: postgresql
+db_host: qa-abinitio-rds-db.cdyowoe8mbah.us-east-1.rds.amazonaws.com
+db_name: qa_ag_db
+db_port: 5432
+db_user: abinitio
 dbms: postgresql
-db_home: /opt/abinitio/abroot/dist/bin/abinitio-V4-0-2-0/lib/postgresql
-db_user_schema_prefix: 'ag402_'
-db_encrypted_password: uqdGrLg03mNysgkL65WpBA==
-db_admin_mhub_encrypted_password: uqdGrLg03mNysgkL65WpBA==
-importer_ab_encrypted_password: '2,,HYoTchS4CrFiPPGWgAOhfcgvo0DMTXg77P1e64SexIw'
-appserver_encrypted_password: uqdGrLg03mNysgkL65WpBA==
-importer_mhub_encrypted_password: 'uqdGrLg03mNysgkL65WpBA=='
-importer_abv1_encrypted_password: 'WYL_wPEizPv0xQl-Yqr8EU'
+db_home: 
+db_user_schema_prefix: 'ag_'
+db_encrypted_password: '2,,LTOXfJ4Ktv7iWF_CSh0MlrziLoUqQ-zYwe3HRZUg1z5'
+db_admin_mhub_encrypted_password: '2,,iZHS195aN1v1eFXJ6OLWtmXLDRlKuQR7AGYpP14aKp5'
+importer_ab_encrypted_password: '2,,IZplBQ57H7qTNPI5ORQ7LC6SiqDr95dSLN1TXla0sTg'
+appserver_encrypted_password: '2,,bTMZxmAM0Bzqm-RrDbUYPCklGNA25RuYgefmCAs6x9S'
+importer_mhub_encrypted_password: '2,,IZplBQ57H7qTNPI5ORQ7LC6SiqDr95dSLN1TXla0sTg'
+importer_abv1_encrypted_password: ''
 report_mhub_encrypted_password: 'uqdGrLg03mNysgkL65WpBA=='
 admin_ab_encrypted_password: '2,,HYoTchS4CrFiPPGWgAOhfcgvo0DMTXg77P1e64SexIw'
 admin_password_hash_encrypted: 'B1(2a,10):UkGI2TeEiaorYYp0rFRoWw==:$2a$10$SiEG0RcCgYmpWWnypDPmUum12WRrqZEC8h4gCpPcIaTzUaoNtFOKK'
