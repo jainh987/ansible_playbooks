@@ -39,4 +39,4 @@ bridge_port: 7071
 bridge_security_config: default-aes128
 bridge_security_type: aes-128
 bridge_rpc_aes128_ab_encrypted_key: '2,,N6zgtJw7Az0RbTYpHlXnHh-oIspwDtxVrgFkK6czS0y'
-bridge_rpc_aes128_mhub_encrypted_key: '2,,N6zgtJw7Az0RbTYpHlXnHh-oIspwDtxVrgFkK6czS0y'
+bridge_rpc_aes128_mhub_encrypted_key: ''
