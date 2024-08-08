@@ -20,25 +20,23 @@ dbms: postgresql
 db_home: 
 db_user_schema_prefix: 'ag_'
 db_encrypted_password: '2,,LTOXfJ4Ktv7iWF_CSh0MlrziLoUqQ-zYwe3HRZUg1z5'
-db_admin_mhub_encrypted_password: '2,,iZHS195aN1v1eFXJ6OLWtmXLDRlKuQR7AGYpP14aKp5'
+db_admin_mhub_encrypted_password: '2,,LTOXfJ4Ktv7iWF_CSh0MlrziLoUqQ-zYwe3HRZUg1z5'
 importer_ab_encrypted_password: '2,,IZplBQ57H7qTNPI5ORQ7LC6SiqDr95dSLN1TXla0sTg'
 appserver_encrypted_password: '2,,bTMZxmAM0Bzqm-RrDbUYPCklGNA25RuYgefmCAs6x9S'
 importer_mhub_encrypted_password: '2,,IZplBQ57H7qTNPI5ORQ7LC6SiqDr95dSLN1TXla0sTg'
-importer_abv1_encrypted_password: ''
-report_mhub_encrypted_password: 'uqdGrLg03mNysgkL65WpBA=='
-admin_ab_encrypted_password: '2,,HYoTchS4CrFiPPGWgAOhfcgvo0DMTXg77P1e64SexIw'
-admin_password_hash_encrypted: 'B1(2a,10):UkGI2TeEiaorYYp0rFRoWw==:$2a$10$SiEG0RcCgYmpWWnypDPmUum12WRrqZEC8h4gCpPcIaTzUaoNtFOKK'
-importer_password_hash_encrypted: 'B1(2a,10):XGIXd4Xl2the5MpDmqJgZg==:$2a$10$VEGVb2Vj0rfc3KnBkoHeXe.2n0RpZpAkp6b0Dl7lIMLe9cWcAILMG'
+importer_abv1_encrypted_password: '2,,IZplBQ57H7qTNPI5ORQ7LC6SiqDr95dSLN1TXla0sTg'
+report_mhub_encrypted_password: '2,,Jtkriw-QM98dHH5Kw1vIc4eLcHnJZHieIf6KdPgZFka'
+admin_ab_encrypted_password: '2,,iZHS195aN1v1eFXJ6OLWtmXLDRlKuQR7AGYpP14aKp5'
 app_type: tomcat
 app_protocol: http
-application_dest: /home/abi/apache-tomcat-8.0.27
-app_user:
-app_grp:
-web_host: <app_server_name>
-app_port: 34562
-bridge_host: <server_with_bridge_running>
-bridge_port: 8078
+application_dest: /tmp
+app_user: abiadm
+app_grp: abigrp
+web_host: arcapp1.private-enterprise-dev.arc.travel
+app_port: 20007
+bridge_host: arcprimary.private-enterprise-dev.arc.travel
+bridge_port: 7071
 bridge_security_config: default-aes128
 bridge_security_type: aes-128
-bridge_rpc_aes128_ab_encrypted_key: '2,,KgNCS6xO6VWxwuFYFakc9g8Myvp0eCjs4fGUb8zzq4g'
-bridge_rpc_aes128_mhub_encrypted_key: 'Hv3jJ46VFfUc+AyWbmofS0YABIAkc3awXuzy6jnldvk='
+bridge_rpc_aes128_ab_encrypted_key: '2,,N6zgtJw7Az0RbTYpHlXnHh-oIspwDtxVrgFkK6czS0y'
+bridge_rpc_aes128_mhub_encrypted_key: '2,,N6zgtJw7Az0RbTYpHlXnHh-oIspwDtxVrgFkK6czS0y'
