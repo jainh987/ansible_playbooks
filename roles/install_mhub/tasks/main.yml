@@ -1,0 +1,200 @@
+# Task to install MetaData-HUB
+
+- name: Creating log file
+  become: no
+  file: 
+    dest: /tmp/ansible_logs/mhub_logs.txt 
+    state: touch
+  delegate_to: localhost
+
+- name: Ensure pip3 is installed
+  shell: |
+    yum install -y python3-pip
+  become: yes
+
+- name: Install boto3 and botocore using pip3
+  shell: |
+    pip3 install boto3 botocore
+  become: yes
+
+- name: Copy and extract Installer Package from S3
+  aws_s3:
+    bucket: "{{ s3_bucket }}"
+    object: "{{ s3_object }}"
+    dest: "{{ dest_file_path }}/{{ mhub_package }}"
+    mode: get
+  register: s3_download
+
+- name: Updating log file
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/mhub_logs.txt 
+    state: present
+    line: '- Mhub Package downloaded from S3\n'
+  when: s3_download is success
+  delegate_to: localhost
+
+- name: Extract Installer Package
+  unarchive:
+    src: '{{ dest_file_path }}/{{ mhub_package }}'
+    dest: '{{ dest_file_path }}'
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    remote_src: yes
+  register: unarchive
+
+- name: Updating log file
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/mhub_logs.txt 
+    state: present
+    line: '- Mhub Package copy and extract Completed\n'
+  when: unarchive is success
+  delegate_to: localhost
+
+- name: Create Mhub Install and Deploy directories if they don't exist
+  become: yes
+  become_user: '{{ ai_user }}'
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: 0755
+  with_items:
+    - '{{ mhub_install_path }}'
+    - '{{ mhub_deploy_root }}/{{ mhub_instance }}/config'
+
+- name: Installing Mhub
+  become: yes
+  become_user: '{{ ai_user }}'
+  shell: |
+    source '{{ env_src_file }}'
+    pkg='{{ mhub_package }}'
+    cd {{ dest_file_path }}/`echo $pkg | awk -F ".tar" '{print $1}'`
+    echo "n" | ./mh-install.ksh -install-root '{{ mhub_install_path }}'
+  args:
+     creates: '{{ mhub_install_path }}/metadata-hub-{{ mhub_version }}'
+  register: installerStatus
+
+- name: Updating log file
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/mhub_logs.txt 
+    state: present
+    line: '- Mhub Installer ran successfully\n'
+  when: installerStatus is success
+  delegate_to: localhost
+
+- name: Copy Mhub deploy_params.config file
+  template:
+    src: './../templates/deploy_params.config.j2'
+    dest: "{{ mhub_deploy_root }}/{{ mhub_instance }}/deploy_params.config"
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: 0755
+
+- name: Copy DBC file to deployment root
+  template:
+    src: './../templates/mhub.dbc.j2'
+    dest: "{{ mhub_deploy_root }}/{{ mhub_instance }}/mhub.dbc"
+    owner: '{{ ai_user }}'
+    group: '{{ ai_grp }}'
+    mode: 0755
+
+- name: Testing the DBC file for DB connect
+  become: yes
+  become_user: '{{ ai_user }}'
+  ignore_errors: true
+  shell: |
+    source '{{ env_src_file }}'
+    export AB_MHUB_HOME='{{ mhub_install_path }}/metadata-hub-{{ mhub_version }}'
+    export AB_MHUB_LOCAL_ROOT={{ mhub_deploy_root }}
+    m_db test '{{ mhub_deploy_root }}/{{ mhub_instance }}/mhub.dbc'
+  register: dbc_test
+
+- name: Creating script for DB creation
+  ignore_errors: true
+  shell: |
+    source '{{ env_src_file }}'
+    export AB_MHUB_HOME='{{ mhub_install_path }}/metadata-hub-{{ mhub_version }}'
+    export AB_MHUB_CONFIG_DIR="{{ mhub_deploy_root }}/{{ mhub_instance }}/config"
+    mh-admin datastore create-physical {{ datastore_name }} -{{ db_type }} -db-owner-username {{ db_user }} -db-owner-encrypted-password {{ db_encrypted_password }} -ds-appserver-encrypted-password {{ appserver_encrypted_password }} -ds-prefix {{ db_user_schema_prefix }} -db-port {{ db_port }} -generate-script >> '{{ mhub_deploy_root }}/{{ mhub_instance }}/config/mhub-{{ db_type }}-create.sql'
+  when: dbc_test is failed
+
+- name: Updating log file for DB error
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/mhub_logs.txt 
+    state: present
+    line: |
+      - DB connection test failed. Please ensure DB instance is up and running. Script '{{ mhub_deploy_root }}/{{ mhub_instance }}/config/mhub-{{ db_type }}-create.sql' needs to be run on the DB server.
+  when: dbc_test is failed
+  delegate_to: localhost
+
+- name: Running the Mhub deployment
+  become: yes
+  become_user: '{{ ai_user }}'
+  shell: |
+    source '{{ env_src_file }}'
+    export AB_MHUB_HOME='{{ mhub_install_path }}/metadata-hub-{{ mhub_version }}'
+    export AB_MHUB_LOCAL_ROOT={{ mhub_deploy_root }}
+    mh-deploy -run -d {{ mhub_deploy_root }}/{{ mhub_instance }} -i '{{ mhub_deploy_root }}/{{ mhub_instance }}/deploy_params.config'
+  register: deployment
+
+- name: Updating log file
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/mhub_logs.txt 
+    state: present
+    line: '- Deployment ran successfully\n'
+  when: deployment is success
+  delegate_to: localhost
+
+- name: Copy war file to Web Host
+  become: yes
+  become_user: '{{ ai_user }}'
+  copy:
+    src: '{{ mhub_deploy_root }}/{{ mhub_instance }}/config/{{ mhub_instance }}.war'
+    dest: '{{ application_dest }}'
+    owner: "{{ app_user }}"
+    group: "{{ app_grp }}"
+    delegate_to: '{{ web_host }}'
+  when: app_type != 'ab-app'
+  register: warFileupload
+
+- name: Updating log file
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/mhub_logs.txt 
+    state: present
+    line: '- War file deployed in Web application Server\n'
+  when: warFileupload is success
+  delegate_to: localhost
+
+- name: Display post installation message
+  debug:
+    msg:
+      - 'Mhub war file is created and placed at below location'
+      - 'Path: {{ mhub_deploy_root }}/{{ mhub_instance }}'
+
+- name: Add relevant parameters in abinitiorc
+  blockinfile:
+    path: '{{ ab_home_path }}/config/abinitiorc'
+    backup: yes
+    insertafter: EOF
+    block: |
+      AB_MHUB_LOCAL_ROOT: {{ mhub_deploy_root }}
+      AB_MHUB_HOME: {{ mhub_install_path }}/metadata-hub-{{ mhub_version }}
+
+- name: Updating log file for successful installation
+  become: no
+  lineinfile:
+    dest: /tmp/ansible_logs/mhub_logs.txt 
+    state: present
+    line: |
+      - MetaDataHub has been successfully installed on {{ web_host }}.
+      Mhub version: {{ mhub_version }}
+      War file directory path: '{{ mhub_deploy_root }}/{{ mhub_instance }}'.
+      Mhub URL: {{ app_protocol }}://{{ web_host }}:{{ app_port }}/{{ mhub_instance }}
+  delegate_to: localhost
