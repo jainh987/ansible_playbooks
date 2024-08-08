@@ -17,16 +17,20 @@ db_name: qa_ag_db
 db_port: 5432
 db_user: abinitio
 dbms: postgresql
-db_home: 
+db_home:
 db_user_schema_prefix: 'ag_'
+db.report.mhub_encrypted_password: '5zzh/X/ttzZiNTg9PRLF5g=='
+db.admin.mhub_encrypted_password: 'X260fd5OO1PxPVLJ4st0VQ=='
+importer_mhub_encrypted_password: '+HZXqRybU/I3QMEKhsmzvg=='
 db_encrypted_password: '2,,LTOXfJ4Ktv7iWF_CSh0MlrziLoUqQ-zYwe3HRZUg1z5'
-db_admin_mhub_encrypted_password: '2,,LTOXfJ4Ktv7iWF_CSh0MlrziLoUqQ-zYwe3HRZUg1z5'
-importer_ab_encrypted_password: '2,,IZplBQ57H7qTNPI5ORQ7LC6SiqDr95dSLN1TXla0sTg'
-appserver_encrypted_password: '2,,bTMZxmAM0Bzqm-RrDbUYPCklGNA25RuYgefmCAs6x9S'
-importer_mhub_encrypted_password: '2,,IZplBQ57H7qTNPI5ORQ7LC6SiqDr95dSLN1TXla0sTg'
-importer_abv1_encrypted_password: '2,,IZplBQ57H7qTNPI5ORQ7LC6SiqDr95dSLN1TXla0sTg'
-report_mhub_encrypted_password: '2,,Jtkriw-QM98dHH5Kw1vIc4eLcHnJZHieIf6KdPgZFka'
+db_admin_mhub_encrypted_password: 'X260fd5OO1PxPVLJ4st0VQ=='
+appserver_encrypted_password: '2,,as5mnIqxj1u6QPCtMs57ahm2IbNTalTnm4Sr6NKTDbp'
+report_mhub_encrypted_password: '5zzh/X/ttzZiNTg9PRLF5g=='
 admin_ab_encrypted_password: '2,,iZHS195aN1v1eFXJ6OLWtmXLDRlKuQR7AGYpP14aKp5'
+importer_ab_encrypted_password: '2,,0-FCcRFIWWzZeVoX11JgMNDmWMYTlyGuuVMQ-gZvIvp'
+importer_abv1_encrypted_password: 'KGL2bFYX8p5Kl9xbxilGOs'
+admin_password_hash_encrypted: 'B1(2a,10):hjU0CpybykZihpfMblXh0w==:$2a$10$fhSyAnwZwiXgfndKZjVfyu6myTqAwTSaTi/10MznkOjJ325Rnqytu'
+importer_password_hash_encrypted: 'B1(2a,10):GyelvyWJYZBPjppyzahcdA==:$2a$10$EwcjtwUHWX/NhnnwxYfab.U/KmdXttU.mrvFhdF./XLYD0v5WZfjS'
 app_type: tomcat
 app_protocol: http
 application_dest: /tmp
@@ -39,4 +43,5 @@ bridge_port: 7071
 bridge_security_config: default-aes128
 bridge_security_type: aes-128
 bridge_rpc_aes128_ab_encrypted_key: '2,,N6zgtJw7Az0RbTYpHlXnHh-oIspwDtxVrgFkK6czS0y'
-bridge_rpc_aes128_mhub_encrypted_key: ''
+bridge.rpc.aes128gcm.mhub_encrypted_key: 'Hv3jJ46VFfUc+AyWbmofS0YABIAkc3awXuzy6jnldvk='
+bridge_rpc_aes128_mhub_encrypted_key: 'Hv3jJ46VFfUc+AyWbmofS0YABIAkc3awXuzy6jnldvk='
