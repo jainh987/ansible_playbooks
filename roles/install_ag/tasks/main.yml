@@ -1,10 +1,20 @@
----
+#Task to install Authorization Gateway
 - name: Creating log file
   become: no
   file:
     dest: /tmp/ansible_logs/logs_ag_install.txt
     state: touch
   delegate_to: localhost
+
+- name: Ensure pip3 is installed
+  shell: |
+    yum install -y python3-pip
+  become: yes
+
+- name: Install boto3 and botocore using pip3
+  shell: |
+    pip3 install boto3 botocore
+  become: yes
 
 - name: Copy and extract Installer Package from S3
   aws_s3:
@@ -110,6 +120,25 @@
     export AB_AG_CONFIG_DIR="{{ ag_deploy_root }}/{{ ag_instance }}/config"
     ag-admin  datastore create-physical {{ datastore_name }} -{{ db_type }} -db-owner-username {{ db_user }} -db-owner-encrypted-password {{ db_encrypted_password }} -ds-appserver-encrypted-password {{ appserver_encrypted_password }} -ds-prefix {{ db_user_schema_prefix }} -db-port {{ db_port }} -generate-script >> '{{ ag_deploy_root }}/{{ ag_instance }}/config/ag-{{ db_type }}-create.sql'
   when: dbc_test is failed
+
+- name: Log DB Creation failure
+  become: no
+  blockinfile:
+    dest: /tmp/ansible_logs/logs_ag_install.txt
+    block: |
+      m_db test failed. Please make sure DB instance is up and running fine.
+
+      Please check with your DB Administrator for DB connection details or if you do not provide credentials during the deployment process, Please run the script on your database server with help of DBA.
+
+      Script :'{{ ag_deploy_root }}/{{ ag_instance }}/config/ag-{{ db_type }}-create.sql'
+
+      1. Copy the .sql file to the database server host.
+      2. Edit the file to provide correct values for the passwords with help of DBA.
+      3. Run the modified file on the database server host.
+      4. Run below command to create the schemas and tables in DB, replacing with correct passwords:
+
+      ag-admin datastore create-schema {{ datastore_name }} -importer-user-password '#importerPassword' -admin-user-password '#adminPassword'
+      Once done, Please run the playbook again. Thanks !
 
 - name: Running the AG deployment
   become: yes
