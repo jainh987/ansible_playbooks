@@ -2,7 +2,7 @@ ai_user: abiadm
 ai_grp: abigrp
 s3_bucket_name: your_s3_bucket_name  # Add your S3 bucket name here
 src_file_path: /tmp/ansible_s3_download  # Temporary path for S3 download
-dest_file_path: /opt/abinitio/abroot/dist/ab-installations/AI_402
+dest_file_path: /tmp
 ag_version: 4-0-2-0
 ag_package: AuthorizationGateway.V4-0-2-0.tar.gz
 env_src_file: /opt/abinitio/skel/setup_aienv_4-0-2-0.ksh
