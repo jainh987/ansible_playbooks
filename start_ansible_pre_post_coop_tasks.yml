@@ -7,40 +7,49 @@
     ansible_python_interpreter: /usr/bin/python3
   tasks:
 
-#    - name: Create Partitions
-#      include_role:
-#        name: create_partition
-#
-#    - name: Create File Systems
-#      include_role:
-#        name: create_fs
-#
-#    - name: Create Mounts
-#      include_role:
-#        name: create_mounts
-
-#    - name: Create necessary users
-#      include_role:
-#        name: check_create_ai_user_group
-#
-#    - name: Create directories for Ab Initio
-#      include_role:
-#        name: create_ab_dir
-#
-#    - name: Install Java
-#      include_role:
-#        name: install_pkgs
-#
-#    - name: Install Co-Op
-#      include_role:
-#        name: install_coop
-
-    - name: Install Control-Center
+    - name: Create Partitions on server group 'partitions_group'
       include_role:
-        name: install_cc
+        name: create_partition
+      when: "'partitions_group' in group_names"
 
-#    - name: Install Authorization-Gateway
+    - name: Create File Systems on server group 'fs_group'
+      include_role:
+        name: create_fs
+      when: "'fs_group' in group_names"
+
+    - name: Create Mounts on server group 'mounts_group'
+      include_role:
+        name: create_mounts
+      when: "'mounts_group' in group_names"
+
+    - name: Create necessary users on server group 'user_group'
+      include_role:
+        name: check_create_ai_user_group
+      when: "'user_group' in group_names"
+
+    - name: Create directories for Ab Initio on server group 'ab_dir_group'
+      include_role:
+        name: create_ab_dir
+      when: "'ab_dir_group' in group_names"
+
+    - name: Install Java-Tomcat on server group 'java_tomcat_group'
+      include_role:
+        name: install_pkgs
+      when: "'java_tomcat_group' in group_names"
+
+    - name: Install Co-Op on server group 'coop_group'
+      include_role:
+        name: install_coop
+      when: "'coop_group' in group_names"
+
+#    - name: Install Control-Center on server group 'cc_group'
+#      include_role:
+#        name: instal_cc
+#      when: "'cc_group' in group_names"
+
+#    - name: Install Authorization-Gateway on server group 'ag_group'
 #      include_role:
 #        name: instal_ag
+#      when: "'ag_group' in group_names"
 
-#More tasks to be added afterwards
+# More tasks to be added afterwards
