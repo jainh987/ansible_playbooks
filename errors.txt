@@ -32,6 +32,7 @@ localhost                  : ok=2    changed=1    unreachable=0    failed=1    s
 
 
 
+
 Copy and extract Installer Package from S3] ****************************************************************************************
 fatal: [localhost]: FAILED! => {"changed": false, "msg": "Failed to import the required Python library (botocore or boto3) on arcprimary.private-enterprise-dev.arc.travel's Python /usr/bin/python. Please read module documentation and install in the appropriate location. If the required library is installed, but Ansible is using the wrong Python interpreter, please consult the documentation on ansible_python_interpreter"}
 
@@ -711,3 +712,41 @@ fatal: [localhost]: FAILED! => {"changed": true, "cmd": "source '/tmp/env_dev.ks
 
 PLAY RECAP ********************************************************************************************************************************************
 localhost                  : ok=16   changed=13   unreachable=0    failed=1    skipped=0    rescued=0    ignored=2
+
+
+
+
+
+
+
+
+////////////////////////// INSTALL AG /////////////////
+
+TASK [install_ag : Copy DBC file to deployment root] **************************************************************************************************
+changed: [localhost]
+
+TASK [install_ag : Testing the DBC file for DB connect] ***********************************************************************************************
+fatal: [localhost]: FAILED! => {"changed": true, "cmd": "source '/tmp/env_dev.ksh'\nexport AB_AG_HOME='/tmp/abinitio_test/auth-gateway-4-2-3-7'\nexport AB_AG_LOCAL_ROOT=/tmp/abinitio_test/AG_deploy\nm_db test '/tmp/abinitio_test/AG_deploy/test_ag/ag.dbc'\n", "delta": "0:00:30.117780", "end": "2024-08-09 13:40:40.635868", "msg": "non-zero return code", "rc": 4, "start": "2024-08-09 13:40:10.518088", "stderr": "ABINITIO(DB00113):  Error remotely executing 'm_db' on node 'qa-abinitio-rds-db.cdyowoe8mbah.us-east-1.rds.amazonaws.com'.\nqa-abinitio-rds-db.cdyowoe8mbah.us-east-1.rds.amazonaws.com: Job failed to start up\n================================================================\n\n2024-08-09 13:40:40: Timed out after 30 seconds waiting for reply.\n----------------------------------------------------------------\nTrouble starting job:\n  Target host:         qa-abinitio-rds-db.cdyowoe8mbah.us-east-1.rds.amazonaws.com\n  Target user name:    abiadm\n  Startup method:      ssh\n  Target AB_HOME:      /abinitio/opt/abinitio_coop\n  Launcher user name:  abiadm\n  Launcher host name:  ip-10-174-97-5.ec2.internal\n  Launcher interface:  10.174.97.5 (from AB_HOST_INTERFACE)\n================================================================\nABINITIO(*):        Database Package Version 4-2-3-6-e11-1", "stderr_lines": ["ABINITIO(DB00113):  Error remotely executing 'm_db' on node 'qa-abinitio-rds-db.cdyowoe8mbah.us-east-1.rds.amazonaws.com'.", "qa-abinitio-rds-db.cdyowoe8mbah.us-east-1.rds.amazonaws.com: Job failed to start up", "================================================================", "", "2024-08-09 13:40:40: Timed out after 30 seconds waiting for reply.", "----------------------------------------------------------------", "Trouble starting job:", "  Target host:         qa-abinitio-rds-db.cdyowoe8mbah.us-east-1.rds.amazonaws.com", "  Target user name:    abiadm", "  Startup method:      ssh", "  Target AB_HOME:      /abinitio/opt/abinitio_coop", "  Launcher user name:  abiadm", "  Launcher host name:  ip-10-174-97-5.ec2.internal", "  Launcher interface:  10.174.97.5 (from AB_HOST_INTERFACE)", "================================================================", "ABINITIO(*):        Database Package Version 4-2-3-6-e11-1"], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [install_ag : Log DB connection test failure] ****************************************************************************************************
+ok: [localhost -> localhost]
+
+TASK [install_ag : Creating script for DB creation] ***************************************************************************************************
+fatal: [localhost]: FAILED! => {"changed": true, "cmd": "source '/tmp/env_dev.ksh'\nexport AB_AG_HOME='/tmp/abinitio_test/auth-gateway-4-2-3-7'\nexport AB_AG_CONFIG_DIR=\"/tmp/abinitio_test/AG_deploy/test_ag/config\"\nag-admin  datastore create-physical qa_ag_db -postgresql -db-owner-username abinitio -db-owner-encrypted-password 2,,LTOXfJ4Ktv7iWF_CSh0MlrziLoUqQ-zYwe3HRZUg1z5 -ds-appserver-encrypted-password 2,,as5mnIqxj1u6QPCtMs57ahm2IbNTalTnm4Sr6NKTDbp -ds-prefix ag_ -db-port 5432 -generate-script >> '/tmp/abinitio_test/AG_deploy/test_ag/config/ag-postgresql-create.sql'\n", "delta": "0:00:03.241662", "end": "2024-08-09 13:40:44.307450", "msg": "non-zero return code", "rc": 2, "start": "2024-08-09 13:40:41.065788", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [install_ag : Log DB Creation failure] ***********************************************************************************************************
+ok: [localhost]
+
+TASK [install_ag : Running the AG deployment as root and then changing ownership] *********************************************************************
+changed: [localhost]
+
+TASK [install_ag : Updating log file] *****************************************************************************************************************
+ok: [localhost -> localhost]
+
+TASK [install_ag : Copy war file to Web Host] *********************************************************************************************************
+An exception occurred during task execution. To see the full traceback, use -vvv. The error was: If you are using a module and expect the file to exist on the remote, see the remote_src option
+fatal: [localhost]: FAILED! => {"changed": false, "msg": "Could not find or access '/tmp/abinitio_test/AG_deploy/test_ag/config/test_ag.war' on the Ansible Controller.\nIf you are using a module and expect the file to exist on the remote, see the remote_src option"}
+
+
