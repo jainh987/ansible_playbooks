@@ -140,15 +140,28 @@
       ag-admin datastore create-schema {{ datastore_name }} -importer-user-password '#importerPassword' -admin-user-password '#adminPassword'
       Once done, Please run the playbook again. Thanks !
 
-- name: Running the AG deployment
+#- name: Running the AG deployment
+#  become: yes
+#  become_user: '{{ ai_user }}'
+#  shell: |
+#    source '{{ env_src_file }}'
+#    export AB_AG_HOME='{{ ag_install_path }}/auth-gateway-{{ ag_version }}'
+#    export AB_AG_LOCAL_ROOT={{ ag_deploy_root }}
+#    ag-deploy -run -d {{ ag_deploy_root }}/{{ ag_instance }} -i '{{ ag_deploy_root }}/{{ ag_instance }}/deploy_params.config'
+#  register: deployment
+
+
+- name: Running the AG deployment as root and then changing ownership
   become: yes
-  become_user: '{{ ai_user }}'
+  become_user: root
   shell: |
     source '{{ env_src_file }}'
     export AB_AG_HOME='{{ ag_install_path }}/auth-gateway-{{ ag_version }}'
     export AB_AG_LOCAL_ROOT={{ ag_deploy_root }}
     ag-deploy -run -d {{ ag_deploy_root }}/{{ ag_instance }} -i '{{ ag_deploy_root }}/{{ ag_instance }}/deploy_params.config'
+    chown -R {{ ai_user }}:{{ ai_grp }} {{ ag_deploy_root }}/{{ ag_instance }}
   register: deployment
+
 
 - name: Updating log file
   become: no
